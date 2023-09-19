@@ -27,6 +27,6 @@ This project was conducted for educational purposes only, and are the results ha
 
 - [Abhishek Bhatia](https://abhatia.me/) (![Github](http://i.imgur.com/9I6NRUm.png): [abhatia08](https://github.com/abhatia08)) 
 
--[Hilary Sandborn](https://hgesandborn.me/)(![Github](http://i.imgur.com/9I6NRUm.png): [hgesandborn](https://github.com/hgesandborn)) 
+- [Hilary Sandborn](![Github](http://i.imgur.com/9I6NRUm.png): [hgesandborn](https://github.com/hgesandborn)) 
 
 
