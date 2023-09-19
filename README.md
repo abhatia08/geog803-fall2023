@@ -31,5 +31,5 @@ This project was conducted for educational purposes only, and are the results ha
 
 - Sara Ghebremicael(![Github](http://i.imgur.com/9I6NRUm.png): [sghebre](https://github.com/sghebre)) 
 
-- Author
+- Amy Wallace(![Github](http://i.imgur.com/9I6NRUm.png): [Amy-Wallace](https://github.com/Amy-Wallace)) 
 
