@@ -30,3 +30,6 @@ This project was conducted for educational purposes only, and are the results ha
 - Hilary Sandborn(![Github](http://i.imgur.com/9I6NRUm.png): [hgesandborn](https://github.com/hgesandborn)) 
 
 - Sara Ghebremicael(![Github](http://i.imgur.com/9I6NRUm.png): [sghebre](https://github.com/sghebre)) 
+
+- Author
+
