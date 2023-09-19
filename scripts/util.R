@@ -13,4 +13,5 @@ ensure_directory <- function(directory) {
   }
 }
 
+# Example
 
