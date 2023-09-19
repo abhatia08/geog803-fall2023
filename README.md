@@ -33,3 +33,5 @@ This project was conducted for educational purposes only, and are the results ha
 
 - Amy Wallace(![Github](http://i.imgur.com/9I6NRUm.png): [Amy-Wallace](https://github.com/Amy-Wallace)) 
 
+- Georgina Gemayel(![Github]http://i.imgur.com/9I6NRUm.png):
+[Ggemayel](https://github.com/ggemayel))
