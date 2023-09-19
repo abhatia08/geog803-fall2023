@@ -45,10 +45,7 @@ docs/
 po/*~
 
 # data files
-source_data/pcen_v2018_y18.txt.zip
-source_data/__MACOSX
-source_data/AHRF_2018-2019
-source_data/0
+/source_data/*
 
 
 
@@ -60,3 +57,4 @@ source_data/0
 # bash history
 .bash_history
 .DS_Store
+
