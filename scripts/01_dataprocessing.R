@@ -19,7 +19,6 @@ dir.create(here::here("derived_data"), showWarnings = FALSE)
 
 ## 1. Load in all data ----
 hvi_data <- read_csv(here::here("source_data", "heat_vulnerability", "hvi_data.csv")) %>% as.data.frame()
-# true_census <- st_read(here::here("source_data", "spatial_tables", "true_cenusTracts.shp"))
 househeat <- read_csv(here::here("source_data", "spatial_tables", "house_heating_final.csv")) %>% as.data.frame()
 houseincome <- read_csv(here::here("source_data", "spatial_tables", "house_income_final.csv")) %>% as.data.frame()
 
@@ -43,6 +42,9 @@ merged_df <- merged_df %>%
 
 ### Remove duplicate columns
 merged_df <- merged_df[, !duplicated(colnames(merged_df))]
+
+merged_df <- merged_df %>% select (-c(name, name_y, objectid,shape)) %>% rename(name = name_x)
+merged_df <- merged_df %>% select(geoid,state, name, everything()) %>% arrange(state, county, name)
 
 ### Save dataframe in derived_data folder ----
 write_csv(merged_df, here::here("derived_data", "merged_data.csv"))

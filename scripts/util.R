@@ -30,8 +30,9 @@ create_map <- function(data, variable, title, palette = "plasma") {
     theme_void() +
     theme(legend.position = "bottom") +
     labs(title = title) +
-    geom_sf(data = data, fill = NA, color = "black", size = 0.1)
-  
+    geom_sf(data = data, fill = NA, color = "black", size = 0.1) + 
+    facet_wrap(~county, scales = "free_x", ncol = 3)
+
   # Apply the appropriate color scale
   if(is_continuous) {
     p <- p + scale_fill_viridis_c(option = palette, direction = -1, name = title)
