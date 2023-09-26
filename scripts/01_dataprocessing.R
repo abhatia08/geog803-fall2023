@@ -38,7 +38,8 @@ houseincome$GEOID <- as.character(houseincome$GEOID)
 merged_df <- merge_datasets(hvi_data, househeat)
 merged_df <- merge_datasets(merged_df, houseincome)
 merged_df <- janitor::clean_names(merged_df)
-
+merged_df <- merged_df %>%
+  mutate_all(~ifelse(. == "#DIV/0!" | . == "<Null>", NA, .))
 
 ### Remove duplicate columns
 merged_df <- merged_df[, !duplicated(colnames(merged_df))]
