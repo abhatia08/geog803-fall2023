@@ -24,7 +24,7 @@ ensure_directory(here::here("figures"))
 ensure_directory(here::here("figures", "bivariate"))
 ensure_directory(here::here("figures", "univariate"))
 
-# 5. Load data ----
+## 5. Load data ----
 data_path <- here("derived_data", "merged_data.csv")
 if (!file.exists(data_path)) {
   source(here("scripts", "01_dataprocessing.R"))
@@ -47,7 +47,7 @@ df <- df %>% mutate(geoid = as.character(geoid))
 df_shp <- left_join(tract_boundaries, df, by = c("GEOID" = "geoid"))
 rm(tract_boundaries)
 
-# Subset for North Carolina
+# # Subset for North Carolina
 df_shp <- df_shp %>% filter(state == "North Carolina")
 df <- df %>% filter(state == "North Carolina")
 
@@ -76,14 +76,15 @@ map <- ggplot() +
   labs(
     title = "Surface Temp and Tree cover",
   ) +
-  bi_theme()
+  bi_theme() +
+  theme(plot.title = element_text(size = 15))
 
 
 legend <- bi_legend(pal = "GrPink2",
                     dim = 3,
                     xlab = "Higher Temp ",
                     ylab = "Higher Tree Cover ",
-                    size = 10)
+                    size = 7)
 
 finalPlot <- ggdraw() +
   draw_plot(map, 0, 0, 1, 1) +
