@@ -46,8 +46,8 @@ df_shp <- left_join(tract_boundaries, df, by = c("GEOID" = "geoid"))
 rm(tract_boundaries)
 
 # # Subset for North Carolina
-# df_shp <- df_shp %>% filter(state == "Virginia")
-# df <- df %>% filter(state == "Virginia")
+# df_shp <- df_shp %>% filter(state == "North Carolina")
+# df <- df %>% filter(state == "North Carolina")
 
 ## 2. Univariate map ----
 create_map(
