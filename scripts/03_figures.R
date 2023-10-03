@@ -36,7 +36,6 @@ df <- read_csv(data_path)
 tract_boundaries <-
   st_read(here(
     "source_data",
-    "Tract_boundaries",
     "cb_2019_us_tract_500k.shp"
   )) %>%
   st_transform(crs = 4326)

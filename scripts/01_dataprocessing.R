@@ -18,9 +18,9 @@ dir.create(here::here("derived_data"), showWarnings = FALSE)
 # 01 MERGING DATA ----
 
 ## 1. Load in all data ----
-hvi_data <- read_csv(here::here("source_data", "heat_vulnerability", "hvi_data.csv")) %>% as.data.frame()
-househeat <- read_csv(here::here("source_data", "spatial_tables", "house_heating_final.csv")) %>% as.data.frame()
-houseincome <- read_csv(here::here("source_data", "spatial_tables", "house_income_final.csv")) %>% as.data.frame()
+hvi_data <- read_csv(here::here("source_data", "hvi_data.csv")) %>% as.data.frame()
+househeat <- read_csv(here::here("source_data", "house_heating_final.csv")) %>% as.data.frame()
+houseincome <- read_csv(here::here("source_data", "house_income_final.csv")) %>% as.data.frame()
 
 ## 2. Merge datasets ----
 
