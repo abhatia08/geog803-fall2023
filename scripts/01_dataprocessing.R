@@ -81,7 +81,7 @@ merged_df <- merged_df[, !(colnames(merged_df) %in% drop_vars)]
 ### Order columns in a meaningful order ----
 cols_order <- c(
   # Identifiers and general info
-  "geoid", "state", "name", "area", "county",
+  "geoid", "state", "name", "area", "county", "coverage",
   
   # Housing and utilities
   "occupied_housing_units", "vacant_houses_pct", "vacant_houses_standardized", 
