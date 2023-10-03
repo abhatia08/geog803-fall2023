@@ -125,6 +125,13 @@ cols_order <- c(
 
 merged_df <- merged_df[, cols_order]
 
+### Formatting columns ---
+# Convert percentage columns to actual percentages
+pct_cols <- grep("_pct$", colnames(merged_df), value = TRUE)
+merged_df[pct_cols] <- merged_df[pct_cols] %>% 
+  mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
+  mutate_all(~ifelse(!is.na(.) & max(., na.rm = TRUE) <= 1, . * 100, .)) %>% 
+  mutate_all(~round(., 1))
 
 ### Drop all standardized columns ----
 standardized_vars <- grep("_standardized$", colnames(merged_df), value = TRUE)
