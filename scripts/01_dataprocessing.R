@@ -130,15 +130,44 @@ pct_cols <- grep("_pct$", colnames(merged_df), value = TRUE)
 merged_df[pct_cols] <- merged_df[pct_cols] %>% 
   mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
   mutate_all(~ifelse(!is.na(.) & max(., na.rm = TRUE) <= 1, . * 100, .)) %>% 
-  mutate_all(~round(., 1))
+  mutate_all(~round(., 1)) 
+merged_df <- merged_df %>% 
+  mutate(
+    median_income = case_when(
+      median_income == "250000+" ~ "250,000 and over",
+      as.numeric(median_income) < 15000 ~ "Under 15,000",
+      as.numeric(median_income) >= 15000 & as.numeric(median_income) <= 74999 ~ "15,000 to 74,999",
+      as.numeric(median_income) >= 75000 & as.numeric(median_income) <= 149999 ~ "75,000 to 149,999",
+      as.numeric(median_income) >= 150000 & as.numeric(median_income) <= 249999 ~ "150,000 to 249,999",
+      TRUE ~ as.character(median_income) 
+    )
+  )
+
 
 ### Drop all standardized columns ----
-standardized_vars <- grep("_standardized$", colnames(merged_df), value = TRUE)
-merged_df <- merged_df[, !(colnames(merged_df) %in% standardized_vars)]
+standardized_vars <-
+  grep("_standardized$", colnames(merged_df), value = TRUE)
+merged_df <-
+  merged_df[,!(colnames(merged_df) %in% standardized_vars)]
+
+### Drop non-pct columns
+merged_df <-
+  merged_df %>% select(
+    -c(
+      occupied_housing_units,
+      utility_gas,
+      bottled_gas,
+      electricity,
+      fuel_oil,
+      coal,
+      other_fuels,
+      no_fuel
+    )
+  )
 
 ### Drop missing cols
-merged_df <- merged_df %>% filter(!is.na(population_white_pct)) %>% filter(coverage > 50)
-
+merged_df <-
+  merged_df %>% filter(!is.na(population_white_pct)) %>% filter(coverage > 50)
 
 ### Save dataframe in derived_data folder ----
 rm(hvi_data, househeat, houseincome, coverage)
