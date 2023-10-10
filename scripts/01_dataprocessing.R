@@ -126,7 +126,6 @@ cols_order <- c(
 merged_df <- merged_df[, cols_order]
 
 ### Formatting columns ---
-# Convert percentage columns to actual percentages
 pct_cols <- grep("_pct$", colnames(merged_df), value = TRUE)
 merged_df[pct_cols] <- merged_df[pct_cols] %>% 
   mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
@@ -136,6 +135,9 @@ merged_df[pct_cols] <- merged_df[pct_cols] %>%
 ### Drop all standardized columns ----
 standardized_vars <- grep("_standardized$", colnames(merged_df), value = TRUE)
 merged_df <- merged_df[, !(colnames(merged_df) %in% standardized_vars)]
+
+### Drop missing cols
+merged_df <- merged_df %>% filter(!is.na(population_white_pct)) %>% filter(coverage > 50)
 
 
 ### Save dataframe in derived_data folder ----
