@@ -5,6 +5,7 @@ library(here)
 library(tidyverse)
 library(janitor)
 library(sf)
+library(magrittr)
 
 ## 2. Set working directory ----
 here::i_am("scripts/01_dataprocessing.R")
@@ -18,16 +19,17 @@ dir.create(here::here("derived_data"), showWarnings = FALSE)
 # 01 MERGING DATA ----
 
 ## 1. Load in all data ----
-hvi_data <- read_csv(here::here("source_data", "hvi_data.csv")) %>% as.data.frame()
-househeat <- read_csv(here::here("source_data", "house_heating_final.csv")) %>% as.data.frame()
-houseincome <- read_csv(here::here("source_data", "house_income_final.csv")) %>% as.data.frame()
-coverage <- read_csv(here::here("source_data", "coverage.csv")) %>% as.data.frame()
+hvi_data <- read.csv(here::here("source_data", "hvi_data.csv")) %>% as.data.frame()
+househeat <- read.csv(here::here("source_data", "house_heating_final.csv")) %>% as.data.frame()
+houseincome <- read.csv(here::here("source_data", "house_income_final.csv")) %>% as.data.frame()
+coverage <- read.csv(here::here("source_data", "coverage.csv")) %>% as.data.frame()
+
 
 ## 2. Merge datasets ----
 
 ### Function to merge datasets ----
 merge_datasets <- function(main_df, df_to_merge) {
-  merged_df <- left_join(main_df, df_to_merge, by = "GEOID")
+  merged_df <- dplyr::left_join(main_df, df_to_merge, by = "GEOID")
   return(merged_df)
 }
 
@@ -42,12 +44,12 @@ merged_df <- merge_datasets(merged_df, houseincome)
 merged_df <- merge_datasets(merged_df, hvi_data)
 merged_df <- janitor::clean_names(merged_df)
 merged_df <- merged_df %>%
-  mutate_all(~ifelse(. == "#DIV/0!" | . == "<Null>" | . == "-", NA, .))
+  dplyr::mutate_all(~ifelse(. == "#DIV/0!" | . == "<Null>" | . == "-", NA, .))
 
 ### Remove duplicate columns  ----
 merged_df <- merged_df[, !duplicated(colnames(merged_df))]
-merged_df <- merged_df %>% select (-c(name, name_y, objectid,shape)) %>% rename(name = name_x)
-merged_df <- merged_df %>% select(geoid,state, name, everything()) %>% arrange(state, county, name)
+merged_df <- merged_df %>% dplyr::select (-c(name, name_y, objectid,shape)) %>% dplyr::rename(name = name_x)
+merged_df <- merged_df %>% dplyr::select(geoid,state, name, everything()) %>% dplyr::arrange(state, county, name)
 
 
 ### Rename cols  ----
@@ -128,12 +130,12 @@ merged_df <- merged_df[, cols_order]
 ### Formatting columns ---
 pct_cols <- grep("_pct$", colnames(merged_df), value = TRUE)
 merged_df[pct_cols] <- merged_df[pct_cols] %>% 
-  mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
-  mutate_all(~ifelse(!is.na(.) & max(., na.rm = TRUE) <= 1, . * 100, .)) %>% 
-  mutate_all(~round(., 1)) 
+  dplyr::mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
+  dplyr::mutate_all(~ifelse(!is.na(.) & max(., na.rm = TRUE) <= 1, . * 100, .)) %>% 
+  dplyr::mutate_all(~round(., 1)) 
 merged_df <- merged_df %>% 
-  mutate(
-    median_income = case_when(
+  dplyr::mutate(
+    median_income = dplyr::case_when(
       median_income == "250000+" ~ "250,000 and over",
       as.numeric(median_income) < 15000 ~ "Under 15,000",
       as.numeric(median_income) >= 15000 & as.numeric(median_income) <= 74999 ~ "15,000 to 74,999",
@@ -152,7 +154,7 @@ merged_df <-
 
 ### Drop non-pct columns
 merged_df <-
-  merged_df %>% select(
+  merged_df %>% dplyr::select(
     -c(
       occupied_housing_units,
       utility_gas,
@@ -167,12 +169,254 @@ merged_df <-
 
 ### Drop missing cols
 merged_df <-
-  merged_df %>% filter(!is.na(population_white_pct)) %>% filter(coverage > 50)
+  merged_df %>% dplyr::filter(!is.na(population_white_pct)) %>% dplyr::filter(coverage > 50)
+
+
+### Add column for City Name
+merged_df$city <- NA
+
+for (x in 1:5502){
+     if (merged_df$county[x] == "Los Angeles County"){
+       merged_df$city[x] <- as.character("Los Angeles, CA")
+     } 
+  if (merged_df$county[x] == "San Diego County"){
+    merged_df$city[x] <- as.character("San Diego, CA")
+  }
+  if (merged_df$county[x] == "San Francisco County"){
+    merged_df$city[x] <- as.character("San Francisco, CA")
+  }
+  if (merged_df$county[x] == "Boulder County"){
+    merged_df$city[x] <- as.character("Boulder, CO")
+  }
+  if (merged_df$county[x] == "Broward County"){
+    merged_df$city[x] <- as.character("Fort Lauderdale, FL")
+  }
+  if (merged_df$county[x] == "Duval County"){
+    merged_df$city[x] <- as.character("Jacksonville, FL")
+  }
+  if (merged_df$county[x] == "Palm Beach County"){
+    merged_df$city[x] <- as.character("Palm Beach, FL")
+  }
+  if (merged_df$county[x] == "DeKalb County"){
+    merged_df$city[x] <- as.character("Atlanta, GA")
+  }
+  if (merged_df$county[x] == "Fulton County"){
+    merged_df$city[x] <- as.character("Atlanta, GA")
+  }
+  if (merged_df$county[x] == "Ada County"){
+    merged_df$city[x] <- as.character("Boise, ID")
+  }
+  if (merged_df$county[x] == "Canyon County"){
+    merged_df$city[x] <- as.character("Boise, ID")
+  }
+  if (merged_df$county[x] == "Clark County"){
+    merged_df$city[x] <- as.character("Louisville, KY")
+  }
+  if (merged_df$county[x] == "Wayne County"){
+    merged_df$city[x] <- as.character("Richmond, IN")
+  }
+  if (merged_df$county[x] == "Anne Arundel County"){
+    merged_df$city[x] <- as.character("Annapolis, MD")
+  }
+  if (merged_df$county[x] == "Baltimore County"){
+    merged_df$city[x] <- as.character("Baltimore, MD")
+  }
+  if (merged_df$county[x] == "Baltimore city"){
+    merged_df$city[x] <- as.character("Baltimore, MD")
+  }
+  if (merged_df$county[x] == "Montgomery County"){
+    merged_df$city[x] <- as.character("Rockville, MD")
+  }
+  if (merged_df$county[x] == "Middlesex County"){
+    merged_df$city[x] <- as.character("Boston, MA")
+  }
+  if (merged_df$county[x] == "Norfolk County"){
+    merged_df$city[x] <- as.character("Boston, MA")
+  }
+  if (merged_df$county[x] == "Suffolk County"){
+    merged_df$city[x] <- as.character("Boston, MA")
+  }
+  if (merged_df$county[x] == "Worcester County"){
+    merged_df$city[x] <- as.character("Boston, MA")
+  }
+  if (merged_df$county[x] == "Jackson County"){
+    merged_df$city[x] <- as.character("Kansas City, MO")
+  }
+  if (merged_df$state[x] == "Nevada"){
+    merged_df$city[x] <- as.character("Las Vegas, NV")
+  }
+  if (merged_df$county[x] == "Essex County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Hudson County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Union County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Bronx County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Doña Ana County"){
+    merged_df$city[x] <- as.character("El Paso, TX")
+  }
+  if (merged_df$county[x] == "New York County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Westchester County"){
+    merged_df$city[x] <- as.character("New York City, NY")
+  }
+  if (merged_df$county[x] == "Durham County"){
+    merged_df$city[x] <- as.character("Durham, NC")
+  }
+  if (merged_df$county[x] == "Wake County"){
+    merged_df$city[x] <- as.character("Raleigh, NC")
+  }
+  if (merged_df$county[x] == "Franklin County"){
+    merged_df$city[x] <- as.character("Columbus, OH")
+  }
+  if (merged_df$county[x] == "Delaware County"){
+    merged_df$city[x] <- as.character("Columbus, OH")
+  }
+  if (merged_df$county[x] == "Fairfield County"){
+    merged_df$city[x] <- as.character("Columbus, OH")
+  }
+  if (merged_df$county[x] == "Hamilton County"){
+    merged_df$city[x] <- as.character("Cinncinati, OH")
+  }
+  if (merged_df$county[x] == "Multnomah County"){
+    merged_df$city[x] <- as.character("Portland, OR")
+  }
+  if (merged_df$county[x] == "Charleston County"){
+    merged_df$city[x] <- as.character("Charleston, SC")
+  }
+  if (merged_df$county[x] == "Lexington County"){
+    merged_df$city[x] <- as.character("Columbia, SC")
+  }
+  if (merged_df$county[x] == "Richland County"){
+    merged_df$city[x] <- as.character("Columbia, SC")
+  }
+  if (merged_df$county[x] == "Davidson County"){
+    merged_df$city[x] <- as.character("Nashville, TN")
+  }
+  if (merged_df$county[x] == "Knox County"){
+    merged_df$city[x] <- as.character("Knoxville, TN")
+  }
+  if (merged_df$county[x] == "Arlington County"){
+    merged_df$city[x] <- as.character("Arlington, VA")
+  }
+  if (merged_df$county[x] == "Charlottesville city"){
+    merged_df$city[x] <- as.character("Charlottesville, VA")
+  }
+  if (merged_df$county[x] == "Albemarle County"){
+    merged_df$city[x] <- as.character("Charlottesville, VA")
+  }
+  if (merged_df$county[x] == "Harrisonburg city"){
+    merged_df$city[x] <- as.character("Harrisonburg, VA")
+  }
+  if (merged_df$county[x] == "Henrico County"){
+    merged_df$city[x] <- as.character("Richmond, VA")
+  }
+  if (merged_df$county[x] == "Lynchburg city"){
+    merged_df$city[x] <- as.character("Lynchburg, VA")
+  }
+  if (merged_df$county[x] == "Petersburg city"){
+    merged_df$city[x] <- as.character("Richmond, VA")
+  }
+  if (merged_df$county[x] == "Richmond city"){
+    merged_df$city[x] <- as.character("Richmond, VA")
+  }
+  if (merged_df$county[x] == "Prince Edward County"){
+    merged_df$city[x] <- as.character("Richmond, VA")
+  }
+  if (merged_df$county[x] == "Roanoke city"){
+    merged_df$city[x] <- as.character("Roanoke, VA")
+  }
+  if (merged_df$county[x] == "Rockingham County"){
+    merged_df$city[x] <- as.character("Harrisonburg, VA")
+  }
+  if (merged_df$county[x] == "Salem city"){
+    merged_df$city[x] <- as.character("Roanoke, VA")
+  }
+  if (merged_df$county[x] == "Washington County"){
+    merged_df$city[x] <- as.character("Abingdon, VA")
+  }
+  if (merged_df$county[x] == "Winchester city"){
+    merged_df$city[x] <- as.character("Winchester, VA")
+  }
+  if (merged_df$county[x] == "King County"){
+    merged_df$city[x] <- as.character("Seattle, WA")
+  }
+  if (merged_df$county[x] == "Spokane County"){
+    merged_df$city[x] <- as.character("Spokane, WA")
+  }
+  if (merged_df$county[x] == "Milwaukee County"){
+    merged_df$city[x] <- as.character("Milwaukee, WI")
+  }}
+
+
+
+### Add column for Climate Zone
+merged_df$climate_zone <- NA
+
+for (x in 1:5502){
+  y <- merged_df$city[x]
+  if (y == "Los Angeles, CA" || y == "San Diego, CA" || y == "San Francisco, CA" || y == "Jacksonville, FL" || 
+      y == "Palm Beach, FL" || y == "Atlanta, GA" || y == "Louisville, KY" || y == "Annapolis, MD" || 
+      y == "Baltimore, MD" || y == "Rockville, MD" || y == "Kansas City, MO" || y == "New York City, NY" || 
+      y == "Durham, NC" || y == "Raleigh, NC" || y == "Cinncinati, OH" || y == "Portland, OR" || 
+      y == "Charleston, SC" || y == "Columbia, SC" || y == "Nashville, TN" || y == "Knoxville, TN" || 
+      y == "Charlottesville, VA" || y == "Arlington, VA" || y == "Harrisonburg, VA" || y == "Richmond, VA" || 
+      y == "Lynchburg, VA" || y == "Roanoke, VA" || y == "Abingdon, VA" || y == "Winchester, VA" || 
+      y == "Seattle, WA" || y == "Spokane, WA"){
+    merged_df$climate_zone[x] <- as.character("Temperate")
+  }
+  if (y == "Boise, ID" || y == "Las Vegas, NV" || y == "El Paso, TX"){
+    merged_df$climate_zone[x] <- as.character("Arid")
+  }
+  if (y == "Boulder, CO" || y == "Richmond, IN" || y == "Boston, MA" || y == "Columbus, OH" || 
+      y == "Milwaukee, WI"){
+    merged_df$climate_zone[x] <- as.character("Snow")
+  }
+  if (y == "Fort Lauderdale, FL"){
+    merged_df$climate_zone[x] <- as.character("Equatorial")
+  }} 
+
+
+
+### Add column for Region 
+merged_df$region <- NA
+
+for (x in 1:5502){
+  y <- merged_df$city[x]
+  if (y == "Boston, MA" || y == "New York City, NY"){
+    merged_df$region[x] <- as.character("North")
+  }
+  if (y == "Los Angeles, CA" || y == "San Diego, CA" || y == "San Francisco, CA" || y == "Boise, ID" || 
+      y == "Las Vegas, NV" || y == "Boulder, CO" || y == "Portland, OR" ||  y == "Seattle, WA" || 
+      y == "Spokane, WA"){
+    merged_df$region[x] <- as.character("West")
+  }
+  if (y == "Richmond, IN" || y == "Columbus, OH" || 
+      y == "Milwaukee, WI" || y == "Kansas City, MO" || y == "Cinncinati, OH"){
+    merged_df$region[x] <- as.character("Midwest")
+  }
+  if (y == "Jacksonville, FL" || y == "Fort Lauderdale, FL" || y == "Palm Beach, FL" || 
+      y == "Atlanta, GA" || y == "El Paso, TX" || y == "Louisville, KY" || y == "Annapolis, MD" || 
+      y == "Baltimore, MD" || y == "Rockville, MD" || y == "Durham, NC" || y == "Raleigh, NC" || 
+      y == "Charleston, SC" || y == "Columbia, SC" ||  y == "Nashville, TN" || y == "Knoxville, TN" || 
+      y == "Charlottesville, VA" || y == "Arlington, VA" || y == "Harrisonburg, VA" || 
+      y == "Richmond, VA" || y == "Lynchburg, VA" || y == "Roanoke, VA" || y == "Abingdon, VA" || 
+      y == "Winchester, VA"){
+    merged_df$region[x] <- as.character("South")
+  }} 
+
 
 ### Save dataframe in derived_data folder ----
 rm(hvi_data, househeat, houseincome, coverage)
-write_csv(merged_df, here::here("derived_data", "merged_data.csv"))
+#(merged_df, here::here("derived_data", "merged_data.csv"))
 
+write_csv(merged_df, here::here("derived_data", "merged_data_10-24-23.csv"))
 
 
 
