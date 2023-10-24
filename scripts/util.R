@@ -31,7 +31,7 @@ create_map <- function(data, variable, title, palette = "plasma") {
     theme(legend.position = "bottom") +
     labs(title = title) +
     geom_sf(data = data, fill = NA, color = "black", size = 0.1) + 
-    facet_wrap(~county, scales = "free_x", ncol = 3)
+    facet_wrap(~state, ncol = 3)
 
   # Apply the appropriate color scale
   if(is_continuous) {

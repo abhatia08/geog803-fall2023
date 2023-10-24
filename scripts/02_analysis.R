@@ -5,6 +5,7 @@ library(here)
 library(tidyverse)
 library(janitor)
 library(sf)
+library(gt)
 library(gtsummary)
 
 ## 2. Set working directory ----
@@ -30,13 +31,10 @@ df <- read_csv(data_path) %>% as.data.frame()
 
 ## 1. Basic Descriptives ----
 
-### a. Generate a table 1 ----
-
 # Formatting
-
 df <- df %>%
-  mutate(median_income = factor(
-    median_income,
+  mutate(median_income_cat = factor(
+    median_income_cat,
     levels = c(
       "Under 15,000",
       "15,000 to 74,999",
@@ -47,65 +45,101 @@ df <- df %>%
   ))
 
 # Filter the dataframe to keep only the desired columns
-selected_vars <- c("vacant_houses_pct", "houses_single_occupancy_pct", "utility_gas_pct", 
-                   "bottled_gas_pct", "electricity_pct", "fuel_oil_pct", "coal_pct", 
-                   "other_fuels_pct", "no_fuel_pct", "median_income", 
-                   "population_below_poverty_pct", "education_below_hs_pct", "population", 
-                   "population_65_pct", "population_white_pct", "population_minority_pct", "population_disability_pct", "tree_canopy_pct", )
+selected_vars <-
+  c(
+    "vacant_houses_pct",
+    "houses_single_occupancy_pct",
+    "utility_gas_pct",
+    "bottled_gas_pct",
+    "electricity_pct",
+    "fuel_oil_pct",
+    "coal_pct",
+    "other_fuels_pct",
+    "no_fuel_pct",
+    "median_income",
+    "population_below_poverty_pct",
+    "education_below_hs_pct",
+    "population",
+    "population_65_pct",
+    "population_white_pct",
+    "population_minority_pct",
+    "population_disability_pct",
+    "tree_canopy_pct",
+    "morning_air_temp",
+    "afternoon_air_temp",
+    "night_air_temp",
+    "houses_no_internet_pct",
+    "houses_no_vehicle_pct",
+    "impervious_surfaces_pct"
+  )
 
-df_selected <- df %>% select(all_of(selected_vars))
+# Filter the dataframe to keep only the selected variables
+df_selected <- df %>%
+  select(all_of(selected_vars))
 
-# Calculate majority counts and percentages for each variable
-majority_stats <- lapply(selected_vars, function(var) {
-  n_majority <- sum(df[[var]] > 50, na.rm = TRUE)
-  n_total <- length(df[[var]])
-  percent_majority <- (n_majority / n_total) * 100
-  return(list(count = n_majority, percentage = percent_majority))
-})
+### b. Correlation Coefficients ----
 
-# Convert the list to a dataframe
-majority_df <- as.data.frame(do.call(rbind, majority_stats))
-row.names(majority_df) <- selected_vars
+# Ensure the dataframe contains the selected variables and the temperature variables
+df_selected <- df %>%
+  select(all_of(c(selected_vars, "night_air_temp", "afternoon_air_temp", "morning_air_temp")))
 
-# Add a formatted percentage column
-majority_df$percentage_formatted <- sprintf("%d (%.1f%%)", majority_df$count, majority_df$percentage)
+# Function to calculate correlations for the three temperature variables
+calculate_correlation <- function(var_name) {
+  df_selected %>%
+    summarise(
+      night_air_temp_cor = cor(.data[[var_name]], night_air_temp, use = "complete.obs"),
+      afternoon_air_temp_cor = cor(.data[[var_name]], afternoon_air_temp, use = "complete.obs"),
+      morning_air_temp_cor = cor(.data[[var_name]], morning_air_temp, use = "complete.obs")
+    )
+}
 
-# View the dataframe
-print(majority_df)
+# Calculate correlations
+correlation_df <- map_dfr(setdiff(selected_vars, c("night_air_temp", "afternoon_air_temp", "morning_air_temp")), 
+                          ~ calculate_correlation(.x) %>%
+                            add_column(variable = .x, .before = 1))
 
-# If you want to further format this dataframe into a table, you can use the `gt` or `kable` packages.
+# Print pretty table
+# Define a named list of labels for the variables
+var_labels <- list(
+  # ... [your existing labels]
+)
 
-# Descriptive statistics table for the selected columns in dataframe "df"
-table_df <- df %>%
-  tbl_summary(
-    by = NULL,
-    statistic = list(
-      all_of(selected_vars) ~ majority_fun
-    ),
-    label = list(
-      vacant_houses_pct = "Percent of Tracts with Majority Vacant Houses",
-      houses_single_occupancy_pct = "Percent of Tracts with Majority Single Occupancy Houses",
-      utility_gas_pct = "Percent of Tracts with Majority Utility Gas Houses",
-      bottled_gas_pct = "Percent of Tracts with Majority Bottled Gas Houses",
-      electricity_pct = "Percent of Tracts with Majority Electricity Houses",
-      fuel_oil_pct = "Percent of Tracts with Majority Fuel Oil Houses",
-      coal_pct = "Percent of Tracts with Majority Coal Houses",
-      other_fuels_pct = "Percent of Tracts with Majority Other Fuels Houses",
-      no_fuel_pct = "Percent of Tracts with Majority No Fuel Houses",
-      median_income = "Percent of Tracts with Majority Median Income",
-      population_below_poverty_pct = "Percent of Tracts with Majority Population Below Poverty",
-      education_below_hs_pct = "Percent of Tracts with Majority Population with Education Below High School",
-      population = "Percent of Tracts with Majority Population",
-      population_65_pct = "Percent of Tracts with Majority Population Aged 65 and Above",
-      population_white_pct = "Percent of Tracts with Majority White Population",
-      population_minority_pct = "Percent of Tracts with Majority Minority Population"
-    ),
-    missing = "no"
+# Create a mapping of variables to their categories
+variable_categories <- list(
+  # ... [your existing categories]
+)
+
+# Assign categories to the correlation_df
+correlation_df <- correlation_df %>%
+  rowwise() %>%
+  mutate(category = list(names(which(map_lgl(variable_categories, ~variable %in% .x)))) %>% unlist() %>% first())
+
+# Update correlation_df to include descriptive row labels
+correlation_df <- correlation_df %>%
+  rowwise() %>%
+  mutate(label = var_labels[[variable]]) %>%
+  ungroup()
+
+correlation_df <- correlation_df %>% select(c(label, night_air_temp_cor, afternoon_air_temp_cor, morning_air_temp_cor))
+
+# Define the color scale
+color_scale <- scales::col_numeric(
+  palette = c("red", "white", "blue"),
+  domain = c(-1, 1)
+)
+
+# Display the table with categories
+correlation_df %>%
+  arrange(category, label) %>%
+  gt(rowname_col = "label") %>%
+  tab_header(
+    title = "Correlation Coefficients with Air Temperatures"
   ) %>%
-  modify_caption("**Characteristics of sampled tracts**")
+  fmt_number(
+    columns = c("night_air_temp_cor", "afternoon
 
 
-
+#########################################
 ## 2. Assocations ----
 
 

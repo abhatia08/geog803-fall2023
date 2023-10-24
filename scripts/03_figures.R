@@ -44,15 +44,15 @@ df <- df %>% mutate(geoid = as.character(geoid))
 df_shp <- left_join(tract_boundaries, df, by = c("GEOID" = "geoid"))
 rm(tract_boundaries)
 
-# # Subset for North Carolina
-# df_shp <- df_shp %>% filter(state == "North Carolina")
-# df <- df %>% filter(state == "North Carolina")
+# Subset for North Carolina
+df_shp <- df_shp %>% filter(state == "North Carolina")
+df <- df %>% filter(state == "North Carolina")
 
 ## 2. Univariate map ----
 create_map(
   df_shp,
-  "percent_of_population_in_dependent_age_groups_under_18_and_65",
-  "Dependants"
+  "coverage",
+  "Vacant Houses PCT"
 )
 
 ## 3. Create Bivariate Plots using biscale ----
