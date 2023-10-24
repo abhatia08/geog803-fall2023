@@ -414,9 +414,7 @@ for (x in 1:5502){
 
 ### Save dataframe in derived_data folder ----
 rm(hvi_data, househeat, houseincome, coverage)
-#(merged_df, here::here("derived_data", "merged_data.csv"))
-
-write_csv(merged_df, here::here("derived_data", "merged_data_10-24-23.csv"))
+write_csv(merged_df, here::here("derived_data", "merged_data.csv"))
 
 
 
