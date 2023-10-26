@@ -27,7 +27,7 @@ coverage <- read.csv(here::here("source_data", "coverage.csv")) %>% as.data.fram
 
 ## 2. Merge datasets ----
 
-### Function to merge datasets ----
+### Function to merge datasets 
 merge_datasets <- function(main_df, df_to_merge) {
   merged_df <- dplyr::left_join(main_df, df_to_merge, by = "GEOID")
   return(merged_df)
@@ -46,13 +46,13 @@ merged_df <- janitor::clean_names(merged_df)
 merged_df <- merged_df %>%
   dplyr::mutate_all(~ifelse(. == "#DIV/0!" | . == "<Null>" | . == "-", NA, .))
 
-### Remove duplicate columns  ----
+#### Remove duplicate columns  
 merged_df <- merged_df[, !duplicated(colnames(merged_df))]
 merged_df <- merged_df %>% dplyr::select (-c(name, name_y, objectid,shape)) %>% dplyr::rename(name = name_x)
 merged_df <- merged_df %>% dplyr::select(geoid,state, name, everything()) %>% dplyr::arrange(state, county, name)
 
 
-### Rename cols  ----
+#### Rename cols  
 colnames(merged_df) <- c(
   "geoid", "state", "name", "area", "coverage", 
   "occupied_housing_units", "utility_gas", "utility_gas_pct", 
@@ -76,11 +76,11 @@ colnames(merged_df) <- c(
   "night_air_temp", "afternoon_air_temp", "morning_air_temp"
 )
 
-### Drop redundant _x and _y variables ----
+#### Drop redundant _x and _y variables 
 drop_vars <- grep("_x$|_y$", colnames(merged_df), value = TRUE)
 merged_df <- merged_df[, !(colnames(merged_df) %in% drop_vars)]
 
-### Order columns in a meaningful order ----
+#### Order columns in a meaningful order 
 cols_order <- c(
   # Identifiers and general info
   "geoid", "state", "name", "area", "county", "coverage",
@@ -127,7 +127,7 @@ cols_order <- c(
 
 merged_df <- merged_df[, cols_order]
 
-### Formatting columns ---
+### Formatting columns 
 pct_cols <- grep("_pct$", colnames(merged_df), value = TRUE)
 merged_df[pct_cols] <- merged_df[pct_cols] %>% 
   dplyr::mutate_all(~as.numeric(gsub("[^0-9.]", "", .))) %>%
@@ -146,7 +146,7 @@ merged_df <- merged_df %>%
   )
 
 
-### Drop all standardized columns ----
+#### Drop all standardized columns 
 standardized_vars <-
   grep("_standardized$", colnames(merged_df), value = TRUE)
 merged_df <-
@@ -171,8 +171,7 @@ merged_df <-
 merged_df <-
   merged_df %>% dplyr::filter(!is.na(population_white_pct)) %>% dplyr::filter(coverage > 50)
 
-
-### Add column for City Name
+#### Add column for City Name 
 merged_df$city <- NA
 
 for (x in 1:5502){
@@ -384,7 +383,7 @@ for (x in 1:5502){
 
 
 
-### Add column for Region 
+#### Add column for Region 
 merged_df$region <- NA
 
 for (x in 1:5502){
@@ -412,9 +411,199 @@ for (x in 1:5502){
   }} 
 
 
-### Save dataframe in derived_data folder ----
+## 3. Save dataframe in derived_data folder ----
 rm(hvi_data, househeat, houseincome, coverage)
 write_csv(merged_df, here::here("derived_data", "merged_data.csv"))
 
 
 
+# 02 TRACT DATASET ----
+
+### 1. Avg by race ----
+tract_df <- merged_df %>%
+  mutate(
+    minority_night_air_temp = night_air_temp * (population_minority_pct / 100),
+    white_night_air_temp = night_air_temp * (population_white_pct / 100),
+    minority_afternoon_air_temp = afternoon_air_temp * (population_minority_pct / 100),
+    white_afternoon_air_temp = afternoon_air_temp * (population_white_pct / 100),
+    minority_morning_air_temp = morning_air_temp * (population_minority_pct / 100),
+    white_morning_air_temp = morning_air_temp * (population_white_pct / 100)
+  ) %>%
+  select(
+    geoid,
+    minority_night_air_temp,
+    white_night_air_temp,
+    minority_afternoon_air_temp,
+    white_afternoon_air_temp,
+    minority_morning_air_temp,
+    white_morning_air_temp
+  )
+
+### 2. Avg by population_under_5 ----
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      mutate(
+        under_5_night_air_temp = night_air_temp * (population_under_5_pct / 100),
+        under_5_afternoon_air_temp = afternoon_air_temp * (population_under_5_pct / 100),
+        under_5_morning_air_temp = morning_air_temp * (population_under_5_pct / 100),
+        over_5_night_air_temp = night_air_temp * ((100 - population_under_5_pct) / 100),
+        over_5_afternoon_air_temp = afternoon_air_temp * ((100 - population_under_5_pct) / 100),
+        over_5_morning_air_temp = morning_air_temp * ((100 - population_under_5_pct) / 100)
+      ) %>%
+      select(
+        geoid,
+        under_5_night_air_temp,
+        under_5_afternoon_air_temp,
+        under_5_morning_air_temp,
+        over_5_night_air_temp,
+        over_5_afternoon_air_temp,
+        over_5_morning_air_temp
+      ),
+    by = "geoid"
+  )
+
+
+### 3. Dependant population ----
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      mutate(
+        dependant_night_air_temp = night_air_temp * (dependent_age_groups_pct / 100),
+        dependant_afternoon_air_temp = afternoon_air_temp * (dependent_age_groups_pct / 100),
+        dependant_morning_air_temp = morning_air_temp * (dependent_age_groups_pct / 100),
+        non_dependant_night_air_temp = night_air_temp * ((100 - dependent_age_groups_pct) / 100),
+        non_dependant_afternoon_air_temp = afternoon_air_temp * ((100 - dependent_age_groups_pct) / 100),
+        non_dependant_morning_air_temp = morning_air_temp * ((100 - dependent_age_groups_pct) / 100)
+      ) %>%
+      select(geoid, dependant_night_air_temp, dependant_afternoon_air_temp, dependant_morning_air_temp,
+             non_dependant_night_air_temp, non_dependant_afternoon_air_temp, non_dependant_morning_air_temp),
+    by = "geoid"
+  )
+
+### 4. Population w disability ----
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      mutate(
+        disability_night_air_temp = night_air_temp * (population_disability_pct / 100),
+        disability_afternoon_air_temp = afternoon_air_temp * (population_disability_pct / 100),
+        disability_morning_air_temp = morning_air_temp * (population_disability_pct / 100),
+        no_disability_night_air_temp = night_air_temp * ((100 - population_disability_pct) / 100),
+        no_disability_afternoon_air_temp = afternoon_air_temp * ((100 - population_disability_pct) / 100),
+        no_disability_morning_air_temp = morning_air_temp * ((100 - population_disability_pct) / 100)
+      ) %>%
+      select(
+        geoid,
+        disability_night_air_temp, disability_afternoon_air_temp, disability_morning_air_temp,
+        no_disability_night_air_temp, no_disability_afternoon_air_temp, no_disability_morning_air_temp
+      ),
+    by = "geoid"
+  )
+
+### 5 Append climate zone ----
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      select(geoid, region, climate_zone),  # Select the columns you want to join
+    by = "geoid"
+  )
+
+### 5 Append population ----
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      select(geoid, population),  # Select the columns you want to join
+    by = "geoid"
+  )
+
+### 6. Save dataset ----
+write_csv(tract_df, here::here("derived_data", "tract_data.csv"))
+
+
+# 03. CITY DATASET ----
+
+### 1. Avg by race ----
+city_df <- merged_df %>%
+  group_by(city) %>%
+  summarise(
+    minority_night_air_temp = sum(night_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_night_air_temp = sum(night_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE),
+    minority_afternoon_air_temp = sum(afternoon_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_afternoon_air_temp = sum(afternoon_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE),
+    minority_morning_air_temp = sum(morning_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_morning_air_temp = sum(morning_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+## 2. Avg by population_under_5 ----
+city_df <- city_df %>%
+  left_join(
+    merged_df %>%
+      group_by(city) %>%
+      summarise(
+        under_5_night_air_temp = sum(night_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        under_5_afternoon_air_temp = sum(afternoon_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        under_5_morning_air_temp = sum(morning_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        over_5_night_air_temp = sum(night_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE),
+        over_5_afternoon_air_temp = sum(afternoon_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE),
+        over_5_morning_air_temp = sum(morning_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "city"
+  )
+
+### 3. Avg by dependant population ----
+city_df <- city_df %>%
+  left_join(
+    merged_df %>%
+      group_by(city) %>%
+      summarise(
+        dependant_night_air_temp = sum(night_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        dependant_afternoon_air_temp = sum(afternoon_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        dependant_morning_air_temp = sum(morning_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        non_dependant_night_air_temp = sum(night_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE),
+        non_dependant_afternoon_air_temp = sum(afternoon_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE),
+        non_dependant_morning_air_temp = sum(morning_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "city"
+  )
+
+### 4. Avg by population_disability ----
+city_df <- city_df %>%
+  left_join(
+    merged_df %>%
+      group_by(city) %>%
+      summarise(
+        disability_night_air_temp = sum(night_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        disability_afternoon_air_temp = sum(afternoon_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        disability_morning_air_temp = sum(morning_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        no_disability_night_air_temp = sum(night_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE),
+        no_disability_afternoon_air_temp = sum(afternoon_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE),
+        no_disability_morning_air_temp = sum(morning_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "city"
+  )
+
+### 5. Append climate zone ----
+city_df <- city_df %>%
+  left_join(
+    merged_df %>%
+      select(city, region, climate_zone),  # Select the columns you want to join
+    by = "city"
+  )
+
+### 6. Append population ----
+population_by_city <- merged_df %>%
+  group_by(city) %>%
+  summarise(total_population = sum(population, na.rm = TRUE)) %>%
+  ungroup()
+
+city_df <- city_df %>%
+  left_join(population_by_city, by = "city") %>%
+  distinct()
+
+### 7. Save dataset ----
+write_csv(city_df, here::here("derived_data", "city_data.csv"))

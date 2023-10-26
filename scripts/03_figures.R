@@ -21,18 +21,33 @@ source(here::here("scripts", "util.R"))
 ## 4. Create necessary directories ----
 ensure_directory(here::here("derived_data"))
 ensure_directory(here::here("figures"))
-ensure_directory(here::here("figures", "bivariate"))
-ensure_directory(here::here("figures", "univariate"))
+ensure_directory(here::here("figures", "maps"))
 
 ## 5. Load data ----
 data_path <- here("derived_data", "merged_data.csv")
 if (!file.exists(data_path)) {
   source(here("scripts", "01_dataprocessing.R"))
 }
-df <- read_csv(data_path)
+df <- read_csv(data_path) %>% as.data.frame()
+city_df <- read_csv(here("derived_data", "city_data.csv"))
+tract_df <- read_csv(here("derived_data", "tract_data.csv"))
+
 
 # 03. FIGURES ----
-## 1. Create merged spatial file ----
+## 1. Figure 1- Kernel Density ----
+## Diagnostic, the latter is "blue"
+plot_temperature_distributions(city_df, "under_5", "over_5")
+
+plot_temperature_distributions(tract_df, "minority", "white")
+
+plot_temperature_distributions(tract_df, "disability", "no_disability")
+
+plot_temperature_distributions(tract_df, "disability", "no_disability")
+
+
+
+## 2. Maps ----
+### Create merged spatial file ----
 tract_boundaries <-
   st_read(here(
     "source_data",
@@ -48,14 +63,14 @@ rm(tract_boundaries)
 df_shp <- df_shp %>% filter(state == "North Carolina")
 df <- df %>% filter(state == "North Carolina")
 
-## 2. Univariate map ----
+### Univariate map ----
 create_map(
   df_shp,
   "coverage",
   "Vacant Houses PCT"
 )
 
-## 3. Create Bivariate Plots using biscale ----
+### Create Bivariate Plots using biscale ----
 data <-
   bi_class(
     df_shp,
