@@ -194,7 +194,7 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Jacksonville, FL")
   }
   if (merged_df$county[x] == "Palm Beach County"){
-    merged_df$city[x] <- as.character("Palm Beach, FL")
+    merged_df$city[x] <- as.character("West Palm Beach, FL")
   }
   if (merged_df$county[x] == "DeKalb County"){
     merged_df$city[x] <- as.character("Atlanta, GA")
@@ -206,16 +206,16 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Boise, ID")
   }
   if (merged_df$county[x] == "Canyon County"){
-    merged_df$city[x] <- as.character("Boise, ID")
+    merged_df$city[x] <- as.character("Nampa, ID")
   }
   if (merged_df$county[x] == "Clark County"){
-    merged_df$city[x] <- as.character("Louisville, KY")
+    merged_df$city[x] <- as.character("Clarksville, IN")
   }
   if (merged_df$county[x] == "Wayne County"){
     merged_df$city[x] <- as.character("Richmond, IN")
   }
   if (merged_df$county[x] == "Anne Arundel County"){
-    merged_df$city[x] <- as.character("Annapolis, MD")
+    merged_df$city[x] <- as.character("Baltimore, MD")
   }
   if (merged_df$county[x] == "Baltimore County"){
     merged_df$city[x] <- as.character("Baltimore, MD")
@@ -224,10 +224,10 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Baltimore, MD")
   }
   if (merged_df$county[x] == "Montgomery County"){
-    merged_df$city[x] <- as.character("Rockville, MD")
+    merged_df$city[x] <- as.character("Montgomery County, MD")
   }
   if (merged_df$county[x] == "Middlesex County"){
-    merged_df$city[x] <- as.character("Boston, MA")
+    merged_df$city[x] <- as.character("Mystic River, MA")
   }
   if (merged_df$county[x] == "Norfolk County"){
     merged_df$city[x] <- as.character("Boston, MA")
@@ -236,34 +236,34 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Boston, MA")
   }
   if (merged_df$county[x] == "Worcester County"){
-    merged_df$city[x] <- as.character("Boston, MA")
+    merged_df$city[x] <- as.character("Worcester County, MA")
   }
   if (merged_df$county[x] == "Jackson County"){
     merged_df$city[x] <- as.character("Kansas City, MO")
   }
   if (merged_df$state[x] == "Nevada"){
-    merged_df$city[x] <- as.character("Las Vegas, NV")
+    merged_df$city[x] <- as.character("Clark County, NV")
   }
   if (merged_df$county[x] == "Essex County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Jersey City/Newark/Elizabeth, NJ")
   }
   if (merged_df$county[x] == "Hudson County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Jersey City/Newark/Elizabeth, NJ")
   }
   if (merged_df$county[x] == "Union County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Jersey City/Newark/Elizabeth, NJ")
   }
   if (merged_df$county[x] == "Bronx County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Bronx-Manhattan, NY")
   }
   if (merged_df$county[x] == "Doña Ana County"){
-    merged_df$city[x] <- as.character("El Paso, TX")
+    merged_df$city[x] <- as.character("Las Cruces, NV")
   }
   if (merged_df$county[x] == "New York County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Bronx-Manhattan, NY")
   }
   if (merged_df$county[x] == "Westchester County"){
-    merged_df$city[x] <- as.character("New York City, NY")
+    merged_df$city[x] <- as.character("Bronx-Manhattan, NY")
   }
   if (merged_df$county[x] == "Durham County"){
     merged_df$city[x] <- as.character("Durham, NC")
@@ -284,7 +284,7 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Cinncinati, OH")
   }
   if (merged_df$county[x] == "Multnomah County"){
-    merged_df$city[x] <- as.character("Portland, OR")
+    merged_df$city[x] <- as.character("East Multnomah, OR")
   }
   if (merged_df$county[x] == "Charleston County"){
     merged_df$city[x] <- as.character("Charleston, SC")
@@ -320,13 +320,13 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Lynchburg, VA")
   }
   if (merged_df$county[x] == "Petersburg city"){
-    merged_df$city[x] <- as.character("Richmond, VA")
+    merged_df$city[x] <- as.character("Petersburg, VA")
   }
   if (merged_df$county[x] == "Richmond city"){
     merged_df$city[x] <- as.character("Richmond, VA")
   }
   if (merged_df$county[x] == "Prince Edward County"){
-    merged_df$city[x] <- as.character("Richmond, VA")
+    merged_df$city[x] <- as.character("Farmville, VA")
   }
   if (merged_df$county[x] == "Roanoke city"){
     merged_df$city[x] <- as.character("Roanoke, VA")
@@ -335,7 +335,7 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Harrisonburg, VA")
   }
   if (merged_df$county[x] == "Salem city"){
-    merged_df$city[x] <- as.character("Roanoke, VA")
+    merged_df$city[x] <- as.character("Salem, VA")
   }
   if (merged_df$county[x] == "Washington County"){
     merged_df$city[x] <- as.character("Abingdon, VA")
@@ -344,7 +344,7 @@ for (x in 1:5502){
     merged_df$city[x] <- as.character("Winchester, VA")
   }
   if (merged_df$county[x] == "King County"){
-    merged_df$city[x] <- as.character("Seattle, WA")
+    merged_df$city[x] <- as.character("Seattle/King County, WA")
   }
   if (merged_df$county[x] == "Spokane County"){
     merged_df$city[x] <- as.character("Spokane, WA")
@@ -361,20 +361,20 @@ merged_df$climate_zone <- NA
 for (x in 1:5502){
   y <- merged_df$city[x]
   if (y == "Los Angeles, CA" || y == "San Diego, CA" || y == "San Francisco, CA" || y == "Jacksonville, FL" || 
-      y == "Palm Beach, FL" || y == "Atlanta, GA" || y == "Louisville, KY" || y == "Annapolis, MD" || 
-      y == "Baltimore, MD" || y == "Rockville, MD" || y == "Kansas City, MO" || y == "New York City, NY" || 
-      y == "Durham, NC" || y == "Raleigh, NC" || y == "Cinncinati, OH" || y == "Portland, OR" || 
+      y == "West Palm Beach, FL" || y == "Atlanta, GA" || y == "Clarksville, IN" || y == "Jersey City/Newark/Elizabeth, NJ" ||
+      y == "Baltimore, MD" || y == "Montgomery County, MD" || y == "Kansas City, MO" || y == "Bronx-Manhattan, NY" || 
+      y == "Durham, NC" || y == "Raleigh, NC" || y == "Cinncinati, OH" || y == "East Multonomah, OR" || 
       y == "Charleston, SC" || y == "Columbia, SC" || y == "Nashville, TN" || y == "Knoxville, TN" || 
       y == "Charlottesville, VA" || y == "Arlington, VA" || y == "Harrisonburg, VA" || y == "Richmond, VA" || 
       y == "Lynchburg, VA" || y == "Roanoke, VA" || y == "Abingdon, VA" || y == "Winchester, VA" || 
-      y == "Seattle, WA" || y == "Spokane, WA"){
+      y == "Seattle/King County, WA" || y == "Spokane, WA"|| y == "Petersburg, VA" || y == "Farmville, VA" || y == "Salem, VA"){
     merged_df$climate_zone[x] <- as.character("Temperate")
   }
-  if (y == "Boise, ID" || y == "Las Vegas, NV" || y == "El Paso, TX"){
+  if (y == "Boise, ID" || y == "Clark County, NV" || y == "Las Cruces, NV" || y == "Nampa, ID"){
     merged_df$climate_zone[x] <- as.character("Arid")
   }
   if (y == "Boulder, CO" || y == "Richmond, IN" || y == "Boston, MA" || y == "Columbus, OH" || 
-      y == "Milwaukee, WI"){
+      y == "Milwaukee, WI" || y == "Mystic River, MA" || y == "Worcester County, MA" ){
     merged_df$climate_zone[x] <- as.character("Snow")
   }
   if (y == "Fort Lauderdale, FL"){
@@ -388,25 +388,26 @@ merged_df$region <- NA
 
 for (x in 1:5502){
   y <- merged_df$city[x]
-  if (y == "Boston, MA" || y == "New York City, NY"){
+  if (y == "Boston, MA" || y == "Bronx-Manhattan, NY" || y == "Mystic River, MA" || y == "Worcester County, MA" ||
+      y == "Jersey City/Newark/Elizabeth, NJ"){
     merged_df$region[x] <- as.character("North")
   }
   if (y == "Los Angeles, CA" || y == "San Diego, CA" || y == "San Francisco, CA" || y == "Boise, ID" || 
-      y == "Las Vegas, NV" || y == "Boulder, CO" || y == "Portland, OR" ||  y == "Seattle, WA" || 
-      y == "Spokane, WA"){
+      y == "Clark County, NV" || y == "Boulder, CO" || y == "East Multnomah, OR" ||  y == "Seattle/King County, WA" || 
+      y == "Spokane, WA" || y == "Nampa, ID"){
     merged_df$region[x] <- as.character("West")
   }
-  if (y == "Richmond, IN" || y == "Columbus, OH" || 
+  if (y == "Richmond, IN" || y == "Columbus, OH" ||  y == "Clarksville, IN" ||
       y == "Milwaukee, WI" || y == "Kansas City, MO" || y == "Cinncinati, OH"){
     merged_df$region[x] <- as.character("Midwest")
   }
-  if (y == "Jacksonville, FL" || y == "Fort Lauderdale, FL" || y == "Palm Beach, FL" || 
-      y == "Atlanta, GA" || y == "El Paso, TX" || y == "Louisville, KY" || y == "Annapolis, MD" || 
-      y == "Baltimore, MD" || y == "Rockville, MD" || y == "Durham, NC" || y == "Raleigh, NC" || 
+  if (y == "Jacksonville, FL" || y == "Fort Lauderdale, FL" || y == "West Palm Beach, FL" || 
+      y == "Atlanta, GA" || y == "Las Cruces, NV" || y == "Clarksville, IN" ||  
+      y == "Baltimore, MD" || y == "Montgomery County, MD" || y == "Durham, NC" || y == "Raleigh, NC" || 
       y == "Charleston, SC" || y == "Columbia, SC" ||  y == "Nashville, TN" || y == "Knoxville, TN" || 
       y == "Charlottesville, VA" || y == "Arlington, VA" || y == "Harrisonburg, VA" || 
       y == "Richmond, VA" || y == "Lynchburg, VA" || y == "Roanoke, VA" || y == "Abingdon, VA" || 
-      y == "Winchester, VA"){
+      y == "Winchester, VA" || y == "Farmville, VA" || y == "Salem, VA" || y == "Petersburg, VA"){
     merged_df$region[x] <- as.character("South")
   }} 
 
