@@ -363,7 +363,7 @@ for (x in 1:5502){
   if (y == "Los Angeles, CA" || y == "San Diego, CA" || y == "San Francisco, CA" || y == "Jacksonville, FL" || 
       y == "West Palm Beach, FL" || y == "Atlanta, GA" || y == "Clarksville, IN" || y == "Jersey City/Newark/Elizabeth, NJ" ||
       y == "Baltimore, MD" || y == "Montgomery County, MD" || y == "Kansas City, MO" || y == "Bronx-Manhattan, NY" || 
-      y == "Durham, NC" || y == "Raleigh, NC" || y == "Cinncinati, OH" || y == "East Multonomah, OR" || 
+      y == "Durham, NC" || y == "Raleigh, NC" || y == "Cinncinati, OH" || y == "East Multnomah, OR" || 
       y == "Charleston, SC" || y == "Columbia, SC" || y == "Nashville, TN" || y == "Knoxville, TN" || 
       y == "Charlottesville, VA" || y == "Arlington, VA" || y == "Harrisonburg, VA" || y == "Richmond, VA" || 
       y == "Lynchburg, VA" || y == "Roanoke, VA" || y == "Abingdon, VA" || y == "Winchester, VA" || 
