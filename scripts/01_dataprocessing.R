@@ -606,6 +606,7 @@ population_by_city <- merged_df %>%
 
 city_df <- city_df %>%
   left_join(population_by_city, by = "city") %>%
+  rename(population = total_population) %>% 
   distinct()
 
 ### 7. Save dataset ----
@@ -697,7 +698,8 @@ county_df <- county_df %>%
       summarise(total_population = sum(population, na.rm = TRUE)) %>%
       ungroup(),
     by = "county"
-  ) %>% mutate(county = stringr::str_to_title(county))
+  ) %>% mutate(county = stringr::str_to_title(county)) %>% 
+  rename(population = total_population) 
 
 ### 7. Save dataset ----
 write_csv(county_df, here::here("derived_data", "county_data.csv"))
