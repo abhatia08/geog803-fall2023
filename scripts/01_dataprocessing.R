@@ -691,15 +691,23 @@ county_df <- county_df %>%
   )
 
 # 6. Append Population
+merged_df <- merged_df %>% mutate(pop_minority = population*(population_minority_pct/100))
+
 county_df <- county_df %>%
   left_join(
     merged_df %>%
       group_by(county) %>%
-      summarise(total_population = sum(population, na.rm = TRUE)) %>%
+      summarise(
+        total_population = sum(population, na.rm = TRUE),
+        total_population_minority = sum(pop_minority, na.rm = TRUE)
+      ) %>% 
       ungroup(),
     by = "county"
-  ) %>% mutate(county = stringr::str_to_title(county)) %>% 
-  rename(population = total_population) 
+  ) %>%
+  rename(
+    population = total_population,
+    population_minority = total_population_minority
+  ) %>% mutate(county = stringr::str_to_title(county)) 
 
 ### 7. Save dataset ----
 write_csv(county_df, here::here("derived_data", "county_data.csv"))

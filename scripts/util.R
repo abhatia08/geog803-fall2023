@@ -4,6 +4,7 @@ library(rlang)
 library(patchwork)
 library(janitor)
 library(survey)
+library(sandwich)
 
 # ENSURE DIRECTORY ----
 ## Create directory if it doesn't exist
@@ -39,7 +40,7 @@ create_map <- function(data, variable, title, palette = "plasma") {
       color = "black",
       size = 0.1
     ) +
-    facet_wrap( ~ state, ncol = 3)
+    facet_wrap(~ state, ncol = 3)
   
   # Apply the appropriate color scale
   if (is_continuous) {
@@ -175,104 +176,6 @@ calc_kappa <- function(a, epsilon, weights = NULL)
   epsilon * (x_sum / x_sq_sum)
 }
 
-# # Weighted Means ----
-# # Function to calculate weighted means
-# calculate_weighted_means <- function(data, time_of_day) {
-#   results <- data %>%
-#     group_by(climate_zone) %>%
-#     summarise(across(ends_with(time_of_day),
-#                      ~ round(
-#                        sum(. * population, na.rm = TRUE) / sum(population, na.rm = TRUE),
-#                        3
-#                      ),
-#                      .names = "mean_{.col}"),
-#               .groups = 'drop')
-#
-# # Calculate the total population-weighted mean
-# total <- summarise(data,
-#                    across(ends_with(time_of_day),
-#                           ~ round(
-#                             sum(. * population, na.rm = TRUE) / sum(population, na.rm = TRUE),
-#                             3
-#                           ),
-#                           .names = "mean_{.col}")) %>%
-#   mutate(climate_zone = "Total")
-#
-# # Combine the results
-# results <- bind_rows(total, results)
-#
-#   # Transpose the dataframe, set the first row as column names, and remove the time_of_day row
-#   results_transposed <- as.data.frame(t(results))
-#   colnames(results_transposed) <- results_transposed[1,]
-#   results_transposed <- results_transposed[-1, , drop = FALSE]
-#
-#   # Remove the prefix and suffix from the row names
-#   new_row_names <- gsub("^mean_", "", rownames(results_transposed))
-#   new_row_names <-
-#     gsub(paste0("_", time_of_day, "$"), "", new_row_names)
-#   rownames(results_transposed) <- new_row_names
-#
-#   results_transposed$variable <- rownames(results_transposed)
-#   rownames(results_transposed) <- NULL
-#
-#   results_transposed <-
-#     results_transposed %>% select(c(variable), everything())
-#   return(results_transposed)
-# }
-#
-# # Function to calculate weighted standard deviations
-# calculate_weighted_sd <- function(data, time_of_day) {
-#   means <- calculate_weighted_means(data, time_of_day)
-#
-#   results_sd <- data %>%
-#     group_by(climate_zone) %>%
-#     summarise(across(ends_with(time_of_day),
-#                      ~ {
-#                        variable_name <- sub(paste0("_", time_of_day, "$"), "", .col)
-#                        mean_value <- means[means$climate_zone == as.character(.by_group), paste0("mean_", variable_name)]
-#                        population_weighted_sd <- sqrt(sum(population * (. - mean_value) ^ 2, na.rm = TRUE) / sum(population, na.rm = TRUE))
-#                        round(population_weighted_sd, 3)
-#                      },
-#                      .names = "sd_{.col}"),
-#               .groups = 'drop') %>%
-#     ungroup()
-#   #
-# # Calculate the total population-weighted standard deviation
-# total_sd <- summarise(data,
-#                       across(ends_with(time_of_day),
-#                              ~ {
-#                                variable_name <- sub(paste0("_", time_of_day, "$"), "", .col)
-#                                mean_value <- means[means$climate_zone == "Total", paste0("mean_", variable_name)]
-#                                population_weighted_sd <- sqrt(sum(population * (. - mean_value) ^ 2, na.rm = TRUE) / sum(population, na.rm = TRUE))
-#                                round(population_weighted_sd, 3)
-#                              },
-#                              .names = "sd_{.col}")) %>%
-#   mutate(climate_zone = "Total")
-#
-# # Combine the results
-# results_sd <- bind_rows(total_sd, results_sd)
-#   # Transpose the dataframe, set the first row as column names, and remove the time_of_day row
-#   results_sd_transposed <- as.data.frame(t(results_sd))
-#   colnames(results_sd_transposed) <- results_sd_transposed[1,]
-#   results_sd_transposed <-
-#     results_sd_transposed[-1, , drop = FALSE]
-#
-#   # Remove the prefix and suffix from the row names
-#   new_row_names <-
-#     gsub("^sd_", "", rownames(results_sd_transposed))
-#   new_row_names <-
-#     gsub(paste0("_", time_of_day, "$"), "", new_row_names)
-#   rownames(results_sd_transposed) <- new_row_names
-#
-#   results_sd_transposed$variable <-
-#     rownames(results_sd_transposed)
-#   rownames(results_sd_transposed) <- NULL
-#
-#   results_sd_transposed <-
-#     results_sd_transposed %>% select(c(variable), everything())
-#   return(results_sd_transposed)
-# }
-
 # Correlations ----
 # Function to calculate correlations for the three temperature variables
 calculate_correlation <- function(var_name) {
@@ -300,7 +203,7 @@ calculate_weighted_means <- function(data, time_of_day) {
   
   # Transpose the dataframe, set the first row as column names, and remove the time_of_day row
   results_transposed <- as.data.frame(t(results))
-  colnames(results_transposed) <- results_transposed[1,]
+  colnames(results_transposed) <- results_transposed[1, ]
   results_transposed <- results_transposed[-1, , drop = FALSE]
   
   # Remove the prefix and suffix from the row names
@@ -332,7 +235,7 @@ calculate_weighted_sd <- function(data, time_of_day) {
   
   # Transpose the dataframe, set the first row as column names, and remove the time_of_day row
   results_sd_transposed <- as.data.frame(t(results_sd))
-  colnames(results_sd_transposed) <- results_sd_transposed[1,]
+  colnames(results_sd_transposed) <- results_sd_transposed[1, ]
   results_sd_transposed <-
     results_sd_transposed[-1, , drop = FALSE]
   
@@ -352,10 +255,38 @@ calculate_weighted_sd <- function(data, time_of_day) {
   return(results_sd_transposed)
 }
 
-# T-tests ----
-library(dplyr)
-library(tidyr)
-library(survey)
+# # Function to calculate weighted means
+# calculate_weighted_means <- function(data, temp_var_minority, temp_var_white) {
+#   data %>%
+#     group_by(climate_zone) %>%
+#     summarise(
+#       total_population = sum(population, na.rm = TRUE),
+#       weighted_mean = sum((get(temp_var_minority) + get(temp_var_white)) / 2 * population, na.rm = TRUE) / sum(population, na.rm = TRUE)
+#     ) %>%
+#     ungroup()
+# }
+#
+# calculate_weighted_sd <- function(data, temp_var_minority, temp_var_white) {
+#   means <- calculate_weighted_means(data, temp_var_minority, temp_var_white)
+#
+#   data %>%
+#     left_join(means, by = "climate_zone") %>%
+#     group_by(climate_zone) %>%
+#     summarise(
+#       total_population = sum(population, na.rm = TRUE),
+#       weighted_sd = sqrt(
+#         sum(
+#           population *
+#             (((get(temp_var_minority) + get(temp_var_white)) / 2 - weighted_mean) ^ 2
+#             ) / sum(population, na.rm = TRUE),
+#           na.rm = TRUE
+#         )
+#       )
+#       ) %>%
+#         ungroup()
+#       }
+
+
 
 # Define the function
 calculate_weighted_t_test <-
@@ -409,10 +340,10 @@ calculate_weighted_t_test <-
                 data = analysis_data)
     
     # Calculate population-weighted means and standard deviations
-    mean_term1 <- svymean( ~ term1, design, na.rm = TRUE)
-    sd_term1 <- svyvar( ~ term1, design, na.rm = TRUE)
-    mean_term2 <- svymean( ~ term2, design, na.rm = TRUE)
-    sd_term2 <- svyvar( ~ term2, design, na.rm = TRUE)
+    mean_term1 <- svymean(~ term1, design, na.rm = TRUE)
+    sd_term1 <- svyvar(~ term1, design, na.rm = TRUE)
+    mean_term2 <- svymean(~ term2, design, na.rm = TRUE)
+    sd_term2 <- svyvar(~ term2, design, na.rm = TRUE)
     
     # Calculate the difference in means and its standard error
     mean_diff <- coef(mean_term1) - coef(mean_term2)
@@ -448,3 +379,192 @@ calculate_weighted_t_test <-
     cat(sprintf("T-Statistic: %.3f\n", t_stat))
     cat(sprintf("P-Value: %.3f\n", p_value), "\n\n")
   }
+
+
+# Computing stats for means ----
+compute_stats <- function(data, time_of_day, climate_zone = NULL) {
+  # Ensure climate_zone and population are correctly formatted
+  data$climate_zone <- as.factor(data$climate_zone)
+  data$population <- as.numeric(data$population)
+
+  # Construct variable names based on time of day
+  temp_var <- paste0(time_of_day, "_air_temp")
+  temp_var_minority <- paste0("minority_", time_of_day, "_air_temp")
+  temp_var_white <- paste0("white_", time_of_day, "_air_temp")
+
+  # Filter data based on climate zone (if provided)
+  filtered_data <- data %>%
+    select(dplyr::contains(temp_var), "climate_zone", "population") %>%
+    filter(if (!is.null(climate_zone))
+      climate_zone == climate_zone
+      else
+        TRUE)
+
+  # Calculate population weighted means and standard deviations
+  results <- calculate_weighted_means(filtered_data, temp_var)
+  sd_results <- calculate_weighted_sd(filtered_data, temp_var)
+
+  # Combine results and format output
+  final_results <- cbind(results, sd_results[,-1])
+  colnames(final_results)[2:5] <-
+    paste0(colnames(final_results)[2:5], "_mean")
+  colnames(final_results)[6:9] <-
+    paste0(colnames(final_results)[6:9], "_sd")
+  final_results <- final_results %>%
+    janitor::clean_names() %>%
+    select(
+      variable,
+      arid_mean,
+      arid_sd,
+      equatorial_mean,
+      equatorial_sd,
+      snow_mean,
+      snow_sd,
+      temperate_mean,
+      temperate_sd
+    )
+
+  # Output 1
+  cat("Stratified by Climate Zone:\n")
+  print(final_results)
+
+  # Calculate totals by climate zone including standard deviations
+  totals_by_climate_zone <- data %>%
+    group_by(climate_zone) %>%
+    summarize(
+      total_population = sum(population),
+      total_temp_white = sum(get(temp_var_white) * population) / sum(population),
+      total_temp_white_sd = sd(get(temp_var_white) * population, na.rm = TRUE),
+      total_temp_minority = sum(get(temp_var_minority) * population) / sum(population),
+      total_temp_minority_sd = sd(get(temp_var_minority) * population, na.rm = TRUE),
+      total_temp = sum((get(temp_var_white) + get(temp_var_minority)) / 2 * population) / sum(population),
+      total_temp_sd = ifelse(n() == 1, 0, sd((population / sum(population)) * (get(temp_var_white) + get(temp_var_minority)) / 2, na.rm = TRUE)),
+      .groups = 'drop'
+    )
+
+  # Output 2
+  cat("\nTotals by Climate Zone:\n")
+  totals_by_climate_zone %>%
+    select(climate_zone, total_population, total_temp, total_temp_sd) %>%
+    print()
+
+  # Calculate total white temp standard deviation across climate zones
+  mean_white_temp <-
+    sum(data[[temp_var_white]] * data$population) / sum(data$population)
+  sum_squared_diff <-
+    sum(data$population * (data[[temp_var_white]] - mean_white_temp) ^ 2)
+  total_white_temp_sd <-
+    sqrt(sum_squared_diff / sum(data$population))
+
+  # Calculate total minority temp standard deviation across climate zones
+  mean_minority_temp <-
+    sum(data[[temp_var_minority]] * data$population) / sum(data$population)
+  sum_squared_diff <-
+    sum(data$population * (data[[temp_var_minority]] - mean_minority_temp) ^
+          2)
+  total_minority_temp_sd <-
+    sqrt(sum_squared_diff / sum(data$population))
+
+  # Calculate totals across climate zones
+  totals_across_climate_zones <- data %>%
+    summarize(
+      total_population = sum(population),
+      total_white_temp = mean_white_temp,
+      total_white_temp_sd = total_white_temp_sd,
+      total_minority_temp = mean_minority_temp,
+      total_minority_temp_sd = total_minority_temp_sd
+    )
+
+  # Output 3
+  cat("\nTotals for Minority and White:\n")
+  print(totals_across_climate_zones)
+
+
+}
+
+
+
+compute_stats <- function(data, time_of_day, climate_zone = NULL) {
+  # Ensure climate_zone and population are correctly formatted
+  data$climate_zone <- as.factor(data$climate_zone)
+  data$population <- as.numeric(data$population)
+  data$population_minority <- as.numeric(data$population_minority)
+
+  # Calculate population_white as the difference between total population and population_minority
+  data$population_white <- data$population - data$population_minority
+
+  # Construct variable names based on time of day
+  temp_var <- paste0(time_of_day, "_air_temp")
+  temp_var_minority <- paste0("minority_", time_of_day, "_air_temp")
+  temp_var_white <- paste0("white_", time_of_day, "_air_temp")
+
+  # Filter data based on climate zone (if provided)
+  filtered_data <- data %>%
+    select(dplyr::contains(temp_var), "climate_zone", "population", "population_minority", "population_white") %>%
+    filter(if (!is.null(climate_zone)) climate_zone == climate_zone else TRUE)
+
+  # Calculate population weighted means and standard deviations
+  results <- calculate_weighted_means(filtered_data, temp_var)
+  sd_results <- calculate_weighted_sd(filtered_data, temp_var)
+
+  # Combine results and format output
+  final_results <- cbind(results, sd_results[,-1])
+  colnames(final_results)[2:5] <- paste0(colnames(final_results)[2:5], "_mean")
+  colnames(final_results)[6:9] <- paste0(colnames(final_results)[6:9], "_sd")
+  final_results <- final_results %>%
+    janitor::clean_names() %>%
+    select(
+      variable,
+      arid_mean,
+      arid_sd,
+      equatorial_mean,
+      equatorial_sd,
+      snow_mean,
+      snow_sd,
+      temperate_mean,
+      temperate_sd
+    )
+
+  # Output 1
+  cat("Stratified by Climate Zone:\n")
+  print(final_results)
+
+  # Calculate totals by climate zone including standard deviations
+  totals_by_climate_zone <- filtered_data %>%
+    group_by(climate_zone) %>%
+    summarize(
+      total_population = sum(population, na.rm = TRUE),
+      total_temp_white = sum(get(temp_var_white) * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
+      total_temp_white_sd = sqrt(sum((get(temp_var_white) - total_temp_white)^2 * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE)),
+      total_temp_minority = sum(get(temp_var_minority) * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE),
+      total_temp_minority_sd = sqrt(sum((get(temp_var_minority) - total_temp_minority)^2 * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE)),
+      total_temp = sum((get(temp_var_white) * population_white + get(temp_var_minority) * population_minority) / population, na.rm = TRUE) / sum(population, na.rm = TRUE),
+      total_temp_sd = sqrt(sum(((get(temp_var_white) * population_white + get(temp_var_minority) * population_minority) / population - total_temp)^2 * population, na.rm = TRUE) / sum(population, na.rm = TRUE)),
+      .groups = 'drop'
+    )
+
+  # Output 2
+  cat("\nTotals by Climate Zone:\n")
+  totals_by_climate_zone %>%
+    select(climate_zone, total_population, total_temp, total_temp_sd) %>%
+    print()
+
+  # Calculate totals across climate zones
+  totals_across_climate_zones <- data %>%
+    summarize(
+      total_population = sum(population, na.rm = TRUE),
+      total_population_minority = sum(population_minority, na.rm = TRUE),
+      total_population_white = sum(population_white, na.rm = TRUE),
+      total_white_temp = sum(get(temp_var_white) * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
+      total_white_temp_sd = sqrt(sum((get(temp_var_white) - total_white_temp)^2 * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE)),
+      total_minority_temp = sum(get(temp_var_minority) * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE),
+      total_minority_temp_sd = sqrt(sum((get(temp_var_minority) - total_minority_temp)^2 * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE))
+    )
+
+  # Output 3
+  cat("\nTotals for Minority and White:\n")
+  print(totals_across_climate_zones)
+}
+
+
+compute_stats(county_df, "morning")
