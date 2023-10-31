@@ -411,6 +411,8 @@ for (x in 1:5502){
     merged_df$region[x] <- as.character("South")
   }} 
 
+#### Add states to county names
+merged_df <- merged_df %>%  mutate (county = paste0(county, ", ", state))
 
 ## 3. Save dataframe in derived_data folder ----
 rm(hvi_data, househeat, houseincome, coverage)
@@ -608,3 +610,95 @@ city_df <- city_df %>%
 
 ### 7. Save dataset ----
 write_csv(city_df, here::here("derived_data", "city_data.csv"))
+
+
+
+# 04. COUNTY DATASET ----
+
+### 1. Avg by race ----
+county_df <- merged_df %>% 
+  # mutate (county = paste0(county, ", ", state)) %>%
+  group_by(county) %>%
+  summarise(
+    minority_night_air_temp = sum(night_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_night_air_temp = sum(night_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE),
+    minority_afternoon_air_temp = sum(afternoon_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_afternoon_air_temp = sum(afternoon_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE),
+    minority_morning_air_temp = sum(morning_air_temp * (population_minority_pct / 100) * population, na.rm = TRUE) / sum((population_minority_pct / 100) * population, na.rm = TRUE),
+    white_morning_air_temp = sum(morning_air_temp * (population_white_pct / 100) * population, na.rm = TRUE) / sum((population_white_pct / 100) * population, na.rm = TRUE)
+  )  %>% 
+  ungroup()
+
+## 2. Avg by population_under_5 ----
+county_df <- county_df %>%
+  left_join(
+    merged_df %>%
+      group_by(county) %>%
+      summarise(
+        under_5_night_air_temp = sum(night_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        under_5_afternoon_air_temp = sum(afternoon_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        under_5_morning_air_temp = sum(morning_air_temp * (population_under_5_pct / 100) * population, na.rm = TRUE) / sum((population_under_5_pct / 100) * population, na.rm = TRUE),
+        over_5_night_air_temp = sum(night_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE),
+        over_5_afternoon_air_temp = sum(afternoon_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE),
+        over_5_morning_air_temp = sum(morning_air_temp * ((100 - population_under_5_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_under_5_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "county"
+  )
+
+### 3. Avg by dependant population ----
+county_df <- county_df %>%
+  left_join(
+    merged_df %>%
+      group_by(county) %>%
+      summarise(
+        dependant_night_air_temp = sum(night_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        dependant_afternoon_air_temp = sum(afternoon_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        dependant_morning_air_temp = sum(morning_air_temp * (dependent_age_groups_pct / 100) * population, na.rm = TRUE) / sum((dependent_age_groups_pct / 100) * population, na.rm = TRUE),
+        non_dependant_night_air_temp = sum(night_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE),
+        non_dependant_afternoon_air_temp = sum(afternoon_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE),
+        non_dependant_morning_air_temp = sum(morning_air_temp * ((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE) / sum(((100 - dependent_age_groups_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "county"
+  )
+
+### 4. Avg by population_disability ----
+county_df <- county_df %>%
+  left_join(
+    merged_df %>%
+      group_by(county) %>%
+      summarise(
+        disability_night_air_temp = sum(night_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        disability_afternoon_air_temp = sum(afternoon_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        disability_morning_air_temp = sum(morning_air_temp * (population_disability_pct / 100) * population, na.rm = TRUE) / sum((population_disability_pct / 100) * population, na.rm = TRUE),
+        no_disability_night_air_temp = sum(night_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE),
+        no_disability_afternoon_air_temp = sum(afternoon_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE),
+        no_disability_morning_air_temp = sum(morning_air_temp * ((100 - population_disability_pct) / 100) * population, na.rm = TRUE) / sum(((100 - population_disability_pct) / 100) * population, na.rm = TRUE)
+      ) %>%
+      ungroup(),
+    by = "county"
+  )
+
+# 5. Append Climate Zone
+county_df <- county_df %>%
+  left_join(
+    merged_df %>%
+      select(county, region, climate_zone) %>%
+      distinct(),  # Ensure that there are no duplicate rows for the join
+    by = "county"
+  )
+
+# 6. Append Population
+county_df <- county_df %>%
+  left_join(
+    merged_df %>%
+      group_by(county) %>%
+      summarise(total_population = sum(population, na.rm = TRUE)) %>%
+      ungroup(),
+    by = "county"
+  ) %>% mutate(county = stringr::str_to_title(county))
+
+### 7. Save dataset ----
+write_csv(county_df, here::here("derived_data", "county_data.csv"))
+
