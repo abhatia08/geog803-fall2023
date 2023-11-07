@@ -516,9 +516,25 @@ tract_df <- tract_df %>%
 tract_df <- tract_df %>%
   left_join(
     merged_df %>%
-      select(geoid, population),  # Select the columns you want to join
+      select(geoid, population),  
     by = "geoid"
   )
+
+merged_df <- merged_df %>% mutate(pop_minority = population*(population_minority_pct/100))
+
+tract_df <- tract_df %>%
+  left_join(
+    merged_df %>%
+      group_by(geoid) %>%
+      summarise(
+          total_population_minority = sum(pop_minority, na.rm = TRUE)
+      ) %>% 
+      ungroup(),
+    by = "geoid"
+  ) %>%
+  rename(
+    population_minority = total_population_minority
+  ) 
 
 ### 6. Save dataset ----
 write_csv(tract_df, here::here("derived_data", "tract_data.csv"))
@@ -681,7 +697,7 @@ county_df <- county_df %>%
     by = "county"
   )
 
-# 5. Append Climate Zone
+### 5. Append Climate Zone ----
 county_df <- county_df %>%
   left_join(
     merged_df %>%
@@ -690,7 +706,7 @@ county_df <- county_df %>%
     by = "county"
   )
 
-# 6. Append Population
+### 6. Append Population ----
 merged_df <- merged_df %>% mutate(pop_minority = population*(population_minority_pct/100))
 
 county_df <- county_df %>%
