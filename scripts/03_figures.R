@@ -45,6 +45,32 @@ plot_temperature_distributions(tract_df, "disability", "no_disability")
 plot_temperature_distributions(tract_df, "disability", "no_disability")
 
 
+## split by climate zone
+
+temperate <- filter(tract_df, climate_zone=="Temperate")
+arid <- filter(tract_df, climate_zone=="Arid")
+snow <- filter(tract_df, climate_zone=="Snow")
+equatorial <- filter(tract_df, climate_zone=="Equatorial")
+
+plot_temperature_distributions(temperate, "minority", "white")
+plot_temperature_distributions(arid, "minority", "white")
+plot_temperature_distributions(snow, "minority", "white")
+plot_temperature_distributions(equatorial, "minority", "white")
+
+
+## split by region
+
+south <- filter(tract_df, region=="South")
+west <- filter(tract_df, region=="West")
+midwest <- filter(tract_df, region=="Midwest")
+north <- filter(tract_df, region=="North")
+
+plot_temperature_distributions(south, "minority", "white")
+plot_temperature_distributions(west, "minority", "white")
+plot_temperature_distributions(midwest, "minority", "white")
+plot_temperature_distributions(north, "minority", "white")
+
+
 
 ## 2. Maps ----
 ### Create merged spatial file ----
