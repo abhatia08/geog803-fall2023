@@ -124,58 +124,6 @@ plot_temperature_distributions <-
 
 
 
-## Kolm-Pollack ----
-# functions from: https://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.Rhttps://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.R
-
-ede <- function(a,
-                epsilon = NULL,
-                kappa = NULL,
-                weights = NULL)
-{
-  if (is.null(kappa)) {
-    if (is.null(epsilon)) {
-      stop("you must provide either an epsilon or kappa aversion parameter")
-    }
-    kappa <- calc_kappa(a, epsilon, weights)
-  }
-  if (is.null(weights)) {
-    ede_sum <- sum(exp(a * -kappa))
-    N <- length(a)
-  } else{
-    ede_sum <- sum(exp(a * -kappa) * weights)
-    N <- sum(weights)
-  }
-  (-1 / kappa) * log(ede_sum / N)
-}
-
-index <- function(a,
-                  epsilon = NULL,
-                  kappa = NULL,
-                  weights = NULL)
-{
-  if (is.null(weights)) {
-    x_mean <- mean(a)
-  } else{
-    x_mean <- sum(a * weights) / sum(weights)
-  }
-  ede(a,
-      epsilon = epsilon,
-      kappa = kappa,
-      weights = weights) - x_mean
-}
-
-calc_kappa <- function(a, epsilon, weights = NULL)
-{
-  if (is.null(weights)) {
-    x_sum <- sum(a)
-    x_sq_sum <- sum(a ** 2)
-  } else {
-    x_sum <- sum(a * weights)
-    x_sq_sum <- sum((a ** 2) * weights)
-  }
-  epsilon * (x_sum / x_sq_sum)
-}
-
 # Correlations ----
 # Function to calculate correlations for the three temperature variables
 calculate_correlation <- function(var_name) {
@@ -397,7 +345,6 @@ compute_stats <- function(data, time_of_day, climate_zone = NULL) {
 }
 
 
-
 calculate_weighted_t_test <- function(data, time_of_day) {
   # Ensure the population is correctly formatted
   data$population <- as.numeric(data$population)
@@ -407,18 +354,18 @@ calculate_weighted_t_test <- function(data, time_of_day) {
   temp_var_white <- paste0("white_", time_of_day, "_air_temp")
   
   # Ensure the selected columns exist in the data
-  if (!all(c(temp_var_minority, temp_var_white, "population", "county") %in% colnames(data))) {
+  if (!all(c(temp_var_minority, temp_var_white, "population", "geoid") %in% colnames(data))) {
     cat("One or more of the required columns do not exist in the data.\n")
     return()
   }
   
   # Select relevant columns
   analysis_data <- data %>%
-    select(all_of(c(temp_var_minority, temp_var_white, "population", "county")))
+    select(all_of(c(temp_var_minority, temp_var_white, "population", "geoid")))
   
   # Create a survey design object
   design <-
-    svydesign(ids = ~ county,
+    svydesign(ids = ~ geoid,
               weights = ~ population,
               data = analysis_data)
   
@@ -442,20 +389,130 @@ calculate_weighted_t_test <- function(data, time_of_day) {
   
   # Print the results
   cat("Time of Day:", time_of_day, "\n")
-  cat(sprintf(
-    "Population-Weighted Mean (Minority): %.3f\n",
-    coef(mean_minority)
-  ))
-  cat(sprintf("Population-Weighted SD (Minority): %.3f\n", sqrt(coef(sd_minority))))
-  cat(sprintf(
-    "Population-Weighted Mean (White): %.3f\n",
-    coef(mean_white)
-  ))
-  cat(sprintf("Population-Weighted SD (White): %.3f\n", sqrt(coef(sd_white))))
   cat(sprintf("Population-Weighted Mean Difference: %.3f\n", mean_diff))
-  cat(sprintf("Clustered SE: %.3f\n", se_diff))
-  cat(sprintf("T-Statistic: %.3f\n", t_stat))
   cat(sprintf("P-Value: %.3f\n", p_value), "\n\n")
 }
 
+calculate_weighted_t_test_by_climate <- function(data, time_of_day) {
+  # Ensure the population is correctly formatted
+  data$population <- as.numeric(data$population)
+  
+  # Construct variable names based on time of day
+  temp_var_minority <- paste0("minority_", time_of_day, "_air_temp")
+  temp_var_white <- paste0("white_", time_of_day, "_air_temp")
+  
+  # Ensure the selected columns exist in the data
+  if (!all(c(temp_var_minority, temp_var_white, "population", "geoid", "climate_zone") %in% colnames(data))) {
+    cat("One or more of the required columns do not exist in the data.\n")
+    return()
+  }
+  
+  # Loop through each unique climate zone
+  for(zone in unique(data$climate_zone)) {
+    cat("Climate Zone:", zone, "\n")
+    
+    # Subset data for the current climate zone
+    subset_data <- data[data$climate_zone == zone,]
+    
+    # If only one PSU, perform unweighted t-test
+    if (length(unique(subset_data$geoid)) == 1) {
+      if (length(na.omit(subset_data[[temp_var_minority]])) < 2 || length(na.omit(subset_data[[temp_var_white]])) < 2) {
+        cat("Not enough observations for unweighted t-test.\n\n")
+        next
+      }
+      t_test_result <- t.test(subset_data[[temp_var_minority]], subset_data[[temp_var_white]])
+      cat("Unweighted T-Test due to single PSU:\n")
+      cat(sprintf("T-Statistic: %.3f\n", t_test_result$statistic))
+      cat(sprintf("P-Value: %.3f\n", t_test_result$p.value), "\n\n")
+      next
+    }
+    
+    # Select relevant columns
+    analysis_data <- subset_data %>%
+      select(all_of(c(temp_var_minority, temp_var_white, "population", "geoid")))
+    
+    # Create a survey design object
+    design <-
+      svydesign(ids = ~ geoid,
+                weights = ~ population,
+                data = analysis_data)
+    
+    # Calculate population-weighted means and standard deviations
+    mean_minority <- svymean( ~get(temp_var_minority), design, na.rm = TRUE)
+    sd_minority <- svyvar( ~get(temp_var_minority), design, na.rm = TRUE)
+    mean_white <- svymean( ~get(temp_var_white), design, na.rm = TRUE)
+    sd_white <- svyvar( ~get(temp_var_white), design, na.rm = TRUE)
+    
+    # Calculate the difference in means and its standard error
+    mean_diff <- coef(mean_minority) - coef(mean_white)
+    se_diff <-
+      sqrt(
+        coef(sd_minority) / sum(analysis_data$population) + coef(sd_white) / sum(analysis_data$population)
+      )
+    
+    # Perform a t-test with clustered standard errors
+    t_stat <- mean_diff / se_diff
+    p_value <-
+      2 * pt(-abs(t_stat), df = sum(analysis_data$population) - 1)
+    
+    # Print the results
+    cat("Time of Day:", time_of_day, "\n")
+     cat(sprintf("Population-Weighted Mean Difference: %.3f\n", mean_diff))
+    cat(sprintf("Clustered SE: %.3f\n", se_diff))
+    cat(sprintf("P-Value: %.3f\n", p_value), "\n\n")
+  }
+}
 
+
+
+# Kolm-Pollack ----
+# functions from: https://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.Rhttps://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.R
+
+ede <- function(a,
+                epsilon = NULL,
+                kappa = NULL,
+                weights = NULL)
+{
+  if (is.null(kappa)) {
+    if (is.null(epsilon)) {
+      stop("you must provide either an epsilon or kappa aversion parameter")
+    }
+    kappa <- calc_kappa(a, epsilon, weights)
+  }
+  if (is.null(weights)) {
+    ede_sum <- sum(exp(a * -kappa))
+    N <- length(a)
+  } else{
+    ede_sum <- sum(exp(a * -kappa) * weights)
+    N <- sum(weights)
+  }
+  (-1 / kappa) * log(ede_sum / N)
+}
+
+index <- function(a,
+                  epsilon = NULL,
+                  kappa = NULL,
+                  weights = NULL)
+{
+  if (is.null(weights)) {
+    x_mean <- mean(a)
+  } else{
+    x_mean <- sum(a * weights) / sum(weights)
+  }
+  ede(a,
+      epsilon = epsilon,
+      kappa = kappa,
+      weights = weights) - x_mean
+}
+
+calc_kappa <- function(a, epsilon, weights = NULL)
+{
+  if (is.null(weights)) {
+    x_sum <- sum(a)
+    x_sq_sum <- sum(a ** 2)
+  } else {
+    x_sum <- sum(a * weights)
+    x_sq_sum <- sum((a ** 2) * weights)
+  }
+  epsilon * (x_sum / x_sq_sum)
+}

@@ -38,7 +38,7 @@ tract_df <- read_csv(here("derived_data", "tract_data.csv"))
 ## Diagnostic, the latter is "blue"
 plot_temperature_distributions(city_df, "under_5", "over_5")
 
-plot_temperature_distributions(tract_df, "minority", "white")
+plot_temperature_distributions(city_df, "minority", "white")
 
 plot_temperature_distributions(tract_df, "disability", "no_disability")
 
@@ -60,8 +60,8 @@ df_shp <- left_join(tract_boundaries, df, by = c("GEOID" = "geoid"))
 rm(tract_boundaries)
 
 # Subset for North Carolina
-df_shp <- df_shp %>% filter(state == "North Carolina")
-df <- df %>% filter(state == "North Carolina")
+# df_shp <- df_shp %>% filter(state == "North Carolina")
+# df <- df %>% filter(state == "North Carolina")
 
 ### Univariate map ----
 create_map(
@@ -74,7 +74,7 @@ create_map(
 data <-
   bi_class(
     df_shp,
-    x = summer_average_land_surface_temperature_f,
+    x = population,
     y = percent_tree_canopy,
     style = "quantile",
     dim = 3
