@@ -52,7 +52,6 @@ compute_stats(tract_df, time_of_day)
 calculate_weighted_t_test(tract_df, time_of_day)
 calculate_weighted_t_test_by_climate(tract_df, time_of_day)
 
-
 ## 2. Afternoon ----
 time_of_day <- "afternoon"
 compute_stats(tract_df, time_of_day)
@@ -66,9 +65,11 @@ calculate_weighted_t_test(tract_df, time_of_day)
 calculate_weighted_t_test_by_climate(tract_df, time_of_day)
 
 
-## 3. Kolm-Pollack ----
-KolmPollak(tract_df$minority_afternoon_air_temp, bigbadx = TRUE)
-KolmPollak(tract_df$white_afternoon_air_temp, bigbadx = TRUE)
+## 4. Kolm-Pollack ----
+KolmPollak(tract_df$minority_afternoon_air_temp, bigbadx = TRUE, na.rm = TRUE)
+KolmPollak(tract_df$white_afternoon_air_temp, bigbadx = TRUE, na.rm = TRUE)
+
+?KolmPollak
 
 KolmPollak(tract_df$minority_night_air_temp, bigbadx = TRUE)
 KolmPollak(tract_df$white_night_air_temp, bigbadx = TRUE)

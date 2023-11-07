@@ -210,9 +210,15 @@ compute_stats <- function(data, time_of_day, climate_zone = NULL) {
   data$climate_zone <- as.factor(data$climate_zone)
   data$population <- as.numeric(data$population)
   
-  # Calculate weights
-  data$weight_minority <- data$population_minority / data$population
-  data$weight_white <- 1 - data$weight_minority
+    if (time_of_day != "tract_df") {
+    # Calculate weights
+    data$weight_minority <- data$population_minority / data$population
+    data$weight_white <- 1 - data$weight_minority
+    } else {
+      
+      data$weight_minority <- 1
+      data$weight_white <- 1 
+    }
   
   # Construct variable names based on time of day
   temp_var <- paste0(time_of_day, "_air_temp")

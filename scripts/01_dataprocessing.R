@@ -516,7 +516,7 @@ tract_df <- tract_df %>%
 tract_df <- tract_df %>%
   left_join(
     merged_df %>%
-      select(geoid, population),  # Select the columns you want to join
+      select(geoid, population),  
     by = "geoid"
   )
 
@@ -527,14 +527,12 @@ tract_df <- tract_df %>%
     merged_df %>%
       group_by(geoid) %>%
       summarise(
-        total_population = sum(population, na.rm = TRUE),
-        total_population_minority = sum(pop_minority, na.rm = TRUE)
+          total_population_minority = sum(pop_minority, na.rm = TRUE)
       ) %>% 
       ungroup(),
-    by = "county"
+    by = "geoid"
   ) %>%
   rename(
-    population = total_population,
     population_minority = total_population_minority
   ) 
 
@@ -699,7 +697,7 @@ county_df <- county_df %>%
     by = "county"
   )
 
-# 5. Append Climate Zone
+### 5. Append Climate Zone ----
 county_df <- county_df %>%
   left_join(
     merged_df %>%
@@ -708,7 +706,7 @@ county_df <- county_df %>%
     by = "county"
   )
 
-# 6. Append Population
+### 6. Append Population ----
 merged_df <- merged_df %>% mutate(pop_minority = population*(population_minority_pct/100))
 
 county_df <- county_df %>%
