@@ -1,0 +1,70 @@
+Total number of unique city-state combinations: 68
+List of unique city-state combinations:
+Oakland and Berkeley, California
+Sacramento, California
+Los Angeles (Northern), California
+Los Angeles (Southern), California
+San Bernardino, California
+Victorville, California
+San Diego, California
+San Francisco, California
+San Jose, California
+Boulder, Colorado
+Washington, District of Columbia
+Fort Lauderdale, Florida
+Jacksonville, Florida
+Miami, Florida
+West Palm Beach, Florida
+Atlanta, Georgia
+Boise, Idaho
+Nampa, Idaho
+Clarksville, Indiana
+Richmond, Indiana
+Omaha, Nebraska
+New Orleans, Louisiana
+Baltimore, Maryland
+Rockville, Gaithersburg, and Takoma Park, Maryland
+Arlington and Woburn, Massachusetts
+Boston, Massachusetts
+Worcester, Massachusetts
+Detroit, Michigan
+Jackson, Mississippi
+Columbia, Missouri
+Kansas City, Missouri
+Las Vegas, Nevada
+Newark, Jersey City, and Elizabeth, New Jersey
+Albuquerque, New Mexico
+Las Cruces, New Mexico
+Manhattan and the Bronx, New York
+Brooklyn and Greenwich Village, New York
+Yonkers, New York
+Raleigh and Durham, North Carolina
+Columbus, Ohio
+Cincinnati, Ohio
+Portland, Oregon
+Gresham, Oregon
+Philadelphia, Pennsylvania
+Providence, Rhode Island
+Charleston, South Carolina
+Columbia, South Carolina
+Nashville, Tennessee
+Knoxville, Tennessee
+El Paso, Texas
+Houston, Texas
+Austin, Texas
+Burlington, Vermont
+Charlottesville, Virginia
+Arlington, Virginia
+Richmond, Virginia
+Farmville, Virginia
+Harrisonburg, Virginia
+Abingdon, Virginia
+Virginia Beach, Virginia
+Lynchburg, Virginia
+Petersburg, Virginia
+Roanoke, Virginia
+Salem, Virginia
+Winchester, Virginia
+Seattle, Washington
+Spokane, Washington
+Milwaukee, Wisconsin
