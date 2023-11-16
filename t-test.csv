@@ -1,0 +1,23 @@
+Demographic,Group,Mean_Temp_Anomaly,Count,T-Statistic,P-Value
+"Percent of Population that is White alone, Non-Hispanic",Higher than median,0.048149719,4612,-17.02517838,5.05E-64
+"Percent of Population that is White alone, Non-Hispanic",Lower than median,0.451490213,4611,-17.02517838,5.05E-64
+Percent Black or African American,Higher than median,0.334480043,4734,7.485945998,7.75E-14
+Percent Black or African American,Lower than median,0.155211894,4539,7.485945998,7.75E-14
+Percent Hispanic or Latino,Higher than median,0.419506292,4764,14.96835558,4.53E-50
+Percent Hispanic or Latino,Lower than median,0.064184373,4509,14.96835558,4.53E-50
+Percent of Population that is Minority,Higher than median,0.450874832,4622,17.01341,6.14E-64
+Percent of Population that is Minority,Lower than median,0.047803609,4601,17.01341,6.14E-64
+Percent of Population 25+ Years who Completed Less Than High School,Higher than median,0.49752035,4625,21.14701907,5.75E-97
+Percent of Population 25+ Years who Completed Less Than High School,Lower than median,0.000621196,4598,21.14701907,5.75E-97
+Percent of Population with a Disability,Higher than median,0.320936206,4666,5.995273154,2.11E-09
+Percent of Population with a Disability,Lower than median,0.176958425,4557,5.995273154,2.11E-09
+Percent of Adults 18+ years who have Limited English Ability,Higher than median,0.405864248,4615,13.10307911,7.03E-39
+Percent of Adults 18+ years who have Limited English Ability,Lower than median,0.093494872,4608,13.10307911,7.03E-39
+Percent of Population that is 65+,Higher than median,0.069354068,4640,-15.28223825,4.35E-52
+Percent of Population that is 65+,Lower than median,0.432486363,4583,-15.28223825,4.35E-52
+Percent age under 10,Higher than median,0.247871318,5314,0.110041518,0.91237883
+Percent age under 10,Lower than median,0.245200083,3959,0.110041518,0.91237883
+Percent age 10 to 64,Higher than median,0.416453692,5062,15.70252237,7.37E-55
+Percent age 10 to 64,Lower than median,0.042708792,4211,15.70252237,7.37E-55
+Percent age over 64,Higher than median,0.078431666,4792,-14.66194569,3.90E-48
+Percent age over 64,Lower than median,0.426710726,4481,-14.66194569,3.90E-48
