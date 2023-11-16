@@ -1,0 +1,69 @@
+Total number of unique cities: 66
+List of unique cities:
+Oakland and Berkeley
+Sacramento
+Los Angeles (Northern)
+Los Angeles (Southern)
+San Bernardino
+Victorville
+San Diego
+San Francisco
+San Jose
+Boulder
+Washington
+Fort Lauderdale
+Jacksonville
+Miami
+West Palm Beach
+Atlanta
+Boise
+Nampa
+Clarksville
+Richmond
+Omaha
+New Orleans
+Baltimore
+Rockville, Gaithersburg, and Takoma Park
+Arlington and Woburn
+Boston
+Worcester
+Detroit
+Jackson
+Columbia
+Columbia
+Kansas City
+Las Vegas
+Newark, Jersey City, and Elizabeth
+Albuquerque
+Las Cruces
+Manhattan and the Bronx
+Brooklyn and Greenwich Village
+Yonkers
+Raleigh and Durham
+Columbus
+Cincinnati
+Portland
+Gresham
+Philadelphia
+Providence
+Charleston
+Nashville
+Knoxville
+El Paso
+Houston
+Austin
+Burlington
+Charlottesville
+Arlington
+Farmville
+Harrisonburg
+Abingdon
+Virginia Beach
+Lynchburg
+Petersburg
+Roanoke
+Salem
+Winchester
+Seattle
+Spokane
+Milwaukee
