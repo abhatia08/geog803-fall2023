@@ -61,7 +61,7 @@ tract_df <- data %>%
       population,
       population_minority
     )
-  )
+  ) %>% filter(population > 0)
 
 ## 3. Save dataset ----
 write_csv(tract_df,
