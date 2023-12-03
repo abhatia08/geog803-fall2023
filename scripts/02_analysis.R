@@ -35,6 +35,7 @@ tract_df <- tract_df %>%
 # 02 ANALYSIS ----
 
 ## 1. Difference-in-means ----
+
 # Calculate weights
 tract_df$weight_minority <-
   tract_df$population_minority / tract_df$population
@@ -46,49 +47,42 @@ tract_df <- tract_df %>%
     total_air_temp = (minority_afternoon_air_temp * population_minority + white_afternoon_air_temp * population_white) / population
   )
 
+### a. Weighted means and SD by climate zone----
 climate_zone_diff_weighted <- tract_df %>%
   group_by(climate_zone) %>%
   summarise(
-    # Calculate weighted means for minority and white
     weighted_mean_minority = sum(minority_afternoon_air_temp * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE),
-    weighted_mean_white = sum(white_afternoon_air_temp * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
-    weighted_mean_difference = weighted_mean_minority - weighted_mean_white,
-    
-    # Calculate weighted standard deviations
     sd_minority = sqrt(sum(population_minority * (minority_afternoon_air_temp - weighted_mean_minority)^2, na.rm = TRUE) / sum(population_minority, na.rm = TRUE)),
+    weighted_mean_white = sum(white_afternoon_air_temp * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
     sd_white = sqrt(sum(population_white * (white_afternoon_air_temp - weighted_mean_white)^2, na.rm = TRUE) / sum(population_white, na.rm = TRUE)),
-    
-    # Calculate overall weighted mean and standard deviation for the total population
     weighted_mean_total = mean(total_air_temp, na.rm = TRUE),
-    weighted_sd_total = sqrt(sum(population * (total_air_temp - weighted_mean_total)^2, na.rm = TRUE) / sum(population, na.rm = TRUE))
+    weighted_sd_total = sqrt(sum(population * (total_air_temp - weighted_mean_total)^2, na.rm = TRUE) / sum(population, na.rm = TRUE)),
+    weighted_mean_difference = weighted_mean_minority - weighted_mean_white
   )
 
 
+### b. Weighted means and SD Total----
 total_diff_weighted <- tract_df %>%
   summarise(
-    # Calculate weighted means for minority and white
     weighted_mean_minority = sum(minority_afternoon_air_temp * population_minority, na.rm = TRUE) / sum(population_minority, na.rm = TRUE),
-    weighted_mean_white = sum(white_afternoon_air_temp * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
-    weighted_mean_difference = weighted_mean_minority - weighted_mean_white,
-    
-    # Calculate weighted standard deviations
     sd_minority = sqrt(sum(population_minority * (minority_afternoon_air_temp - weighted_mean_minority)^2, na.rm = TRUE) / sum(population_minority, na.rm = TRUE)),
+    weighted_mean_white = sum(white_afternoon_air_temp * population_white, na.rm = TRUE) / sum(population_white, na.rm = TRUE),
     sd_white = sqrt(sum(population_white * (white_afternoon_air_temp - weighted_mean_white)^2, na.rm = TRUE) / sum(population_white, na.rm = TRUE)),
-    
-    # Calculate overall weighted mean and standard deviation for the total population
     weighted_mean_total = mean(total_air_temp, na.rm = TRUE),
-    weighted_sd_total = sqrt(sum(population * (total_air_temp - weighted_mean_total)^2, na.rm = TRUE) / sum(population, na.rm = TRUE))
-  ) 
+    weighted_sd_total = sqrt(sum(population * (total_air_temp - weighted_mean_total)^2, na.rm = TRUE) / sum(population, na.rm = TRUE)),
+    weighted_mean_difference = weighted_mean_minority - weighted_mean_white
+  )
 
 
+### c. Difference in means SE by climate zone ----
 # Loop through each climate zone for SEs
-climate_zones <- c("Temperate", "Tropical", "Continental", "Dry")
+climate_zones <- c("Temperate", "Dry", "Continental","Tropical")
 for (zone in climate_zones) {
   data_zone <- filter(tract_df, climate_zone == zone)
   perform_analysis(data_zone, zone)
 }
 
-## Total SE 
+### d. Difference in means SE Total ----
 # Bootstrap for Standard Deviation
 n_boot <- 1000
 boot_results <- numeric(n_boot)
@@ -113,12 +107,12 @@ p_value <- mean(abs(perm_results) >= abs(obs_diff))
 cat("Bootstrap SD of Weighted Mean Difference:", bootstrap_sd, "\n")
 cat("Permutation Test P-Value:", p_value, "\n")
 
-#####################################
 
-# TABLE 2 WITH TRACT ----
-## Kolm-Pollack ----
 
-# Total
+
+## 2. Kolm-Pollack Index ----
+
+### a. Total KP index ----
 KolmPollak(tract_df$total_air_temp,
            bigbadx = TRUE,
            na.rm = TRUE)
@@ -131,7 +125,7 @@ KolmPollak(tract_df$white_afternoon_air_temp,
            bigbadx = TRUE,
            na.rm = TRUE)
 
-## By climate
+### b. KP index by climate ----
 # Looping through each climate zone and applying KolmPollak function
 results <- tract_df %>%
   group_by(climate_zone) %>%
@@ -141,15 +135,107 @@ results <- tract_df %>%
     KolmPollak_white = KolmPollak(white_afternoon_air_temp, bigbadx = TRUE, na.rm = TRUE)
   )
 
+results$KolmPollak_meandiff <- results$KolmPollak_minority - results$KolmPollak_white
+
 # Print the results
 print(results)
 
-## Bootstrapped SE
-# Loop through each climate zone for SEs
-climate_zones <- c("Temperate", "Tropical", "Continental", "Dry")
+### c. SD for White KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+cat("SDs for NH White Kolm Pollack by Climate:", "\n")
 for (zone in climate_zones) {
   data_zone <- filter(tract_df, climate_zone == zone)
-  perform_analysis(data_zone, zone)
+  for (i in 1:n_boot) {
+    boot_sample <- data_zone[sample(nrow(data_zone), replace = TRUE),]
+    boot_results[i] <- KolmPollak(boot_sample$white_afternoon_air_temp,
+                                  bigbadx = TRUE,
+                                  na.rm = TRUE)
+  }
+  bootstrap_sd <- sd(boot_results)
+  cat("Climate Zone:", zone, "\n")
+  cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+}
+
+### d. SD for Minority KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+cat("SDs for Minority Kolm Pollack by Climate:", "\n")
+for (zone in climate_zones) {
+  data_zone <- filter(tract_df, climate_zone == zone)
+  for (i in 1:n_boot) {
+    boot_sample <- data_zone[sample(nrow(data_zone), replace = TRUE),]
+    boot_results[i] <- KolmPollak(boot_sample$minority_afternoon_air_temp,
+                                  bigbadx = TRUE,
+                                  na.rm = TRUE)
+  }
+  bootstrap_sd <- sd(boot_results)
+
+  cat("Climate Zone:", zone, "\n")
+  cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+}
+
+### e. SD for Total KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+cat("SDs for Total Kolm Pollack by Climate:", "\n")
+for (zone in climate_zones) {
+  data_zone <- filter(tract_df, climate_zone == zone)
+  for (i in 1:n_boot) {
+    boot_sample <- data_zone[sample(nrow(data_zone), replace = TRUE),]
+    boot_results[i] <- KolmPollak(boot_sample$total_air_temp,
+                                  bigbadx = TRUE,
+                                  na.rm = TRUE)
+  }
+  bootstrap_sd <- sd(boot_results)
+
+  cat("Climate Zone:", zone, "\n")
+  cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+}
+
+### f. SD for Total KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+for (i in 1:n_boot) {
+  boot_sample <- tract_df[sample(nrow(tract_df), replace = TRUE), ]
+  boot_results[i] <- KolmPollak(boot_sample$total_air_temp,
+                                bigbadx = TRUE,
+                                na.rm = TRUE)
+}
+bootstrap_sd <- sd(boot_results)
+cat("SDs for Total Kolm Pollack:", "\n")
+cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+
+### g. SD for Minority KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+for (i in 1:n_boot) {
+  boot_sample <- tract_df[sample(nrow(tract_df), replace = TRUE), ]
+  boot_results[i] <- KolmPollak(boot_sample$minority_afternoon_air_temp,
+                                bigbadx = TRUE,
+                                na.rm = TRUE)
+}
+bootstrap_sd <- sd(boot_results)
+cat("SDs for Minority Kolm Pollack:", "\n")
+cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+
+### e. SD for White KP index ----
+n_boot <- 1000
+boot_results <- numeric(n_boot)
+for (i in 1:n_boot) {
+  boot_sample <- tract_df[sample(nrow(tract_df), replace = TRUE), ]
+  boot_results[i] <- KolmPollak(boot_sample$white_afternoon_air_temp,
+                                bigbadx = TRUE,
+                                na.rm = TRUE)
+}
+bootstrap_sd <- sd(boot_results)
+cat("SDs for White Kolm Pollack:", "\n")
+cat("Bootstrapped SD:", bootstrap_sd, "\n", "\n")
+
+### Difference in KP index Bootstrapped SE ----
+for (zone in climate_zones) {
+  data_zone <- filter(tract_df, climate_zone == zone)
+  perform_analysis_kolm(data_zone, zone)
 }
 
 ## Total SE 
