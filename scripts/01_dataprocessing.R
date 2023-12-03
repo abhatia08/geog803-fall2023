@@ -21,7 +21,7 @@ dir.create(here::here("derived_data"), showWarnings = FALSE)
 ## 1. Load and process data ----
 data <-
   read.csv(here::here("source_data", "tract_data.csv")) %>%
-  as.data.frame() %>%
+  as.data.frame() %>% filter(Percentage >=50) %>%
   select(
     "GEOID",
     "NAME",
