@@ -21,7 +21,8 @@ dir.create(here::here("derived_data"), showWarnings = FALSE)
 ## 1. Load and process data ----
 data <-
   read.csv(here::here("source_data", "tract_data.csv")) %>%
-  as.data.frame() %>% filter(Percentage >=50) %>%
+  as.data.frame() %>% 
+  filter(PERCENTAGE >=50) %>%
   select(
     "GEOID",
     "NAME",
@@ -35,7 +36,8 @@ data <-
     "Total.Population",
     "Percent.of.Population.that.is.White.alone..Non.Hispanic",
     "Percent.of.Population.that.is.Minority",
-    "Percent.of.Population.whose.Income.is.Below.Poverty.Level"
+    "Percent.of.Population.whose.Income.is.Below.Poverty.Level",
+    "PERCENTAGE"
   ) %>%
   janitor::clean_names() %>%
   filter(!is.na(geoid))
