@@ -1,10 +1,8 @@
 ## Load Libraries
 library(tidyverse)
 library(rlang)
-library(patchwork)
 library(janitor)
 library(survey)
-library(sandwich)
 library(ejanalysis)
 
 # ENSURE DIRECTORY ----
@@ -14,126 +12,6 @@ ensure_directory <- function(directory) {
     dir.create(directory)
     
   }
-}
-
-## Univariate plots
-create_map <- function(data, variable, title, palette = "plasma") {
-  # Check if the variable exists in the data
-  if (!variable %in% names(data)) {
-    stop(paste("Variable", variable, "not found in the data."))
-  }
-  
-  # Check if the variable is continuous or discrete
-  is_continuous <-
-    is.numeric(data[[variable]]) && !is.factor(data[[variable]])
-  
-  # Create the map
-  p <- ggplot() +
-    geom_sf(data = data,
-            aes_string(fill = variable),
-            color = NA) +
-    theme_void() +
-    theme(legend.position = "bottom") +
-    labs(title = title) +
-    geom_sf(
-      data = data,
-      fill = NA,
-      color = "black",
-      size = 0.1
-    ) +
-    facet_wrap( ~ state, ncol = 3)
-  
-  # Apply the appropriate color scale
-  if (is_continuous) {
-    p <-
-      p + scale_fill_viridis_c(option = palette,
-                               direction = -1,
-                               name = title)
-  } else {
-    p <-
-      p + scale_fill_viridis_d(option = palette,
-                               direction = -1,
-                               name = title)
-  }
-  
-  return(p)
-}
-
-# KDensity Plots (Figure 1)
-plot_temperature_distributions <-
-  function(data,
-           temp_var_prefix_1,
-           temp_var_prefix_2) {
-    p1 <- ggplot(data) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_1, "_night_air_temp"),
-        fill = "'Group 1'"
-      ), alpha = 0.5) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_2, "_night_air_temp"),
-        fill = "'Group 2'"
-      ), alpha = 0.5) +
-      labs(
-        title = "Density Plot of Night Air Temperature",
-        x = "Night Air Temperature",
-        y = "Density",
-        fill = NULL
-      ) +
-      theme_minimal() +
-      theme(legend.position = "none")
-    
-    p2 <- ggplot(data) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_1, "_afternoon_air_temp"),
-        fill = "'Group 1'"
-      ), alpha = 0.5) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_2, "_afternoon_air_temp"),
-        fill = "'Group 2'"
-      ), alpha = 0.5) +
-      labs(
-        title = "Density Plot of Afternoon Air Temperature",
-        x = "Afternoon Air Temperature",
-        y = "Density",
-        fill = NULL
-      ) +
-      theme_minimal() +
-      theme(legend.position = "none")
-    
-    p3 <- ggplot(data) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_1, "_morning_air_temp"),
-        fill = "'Group 1'"
-      ), alpha = 0.5) +
-      geom_density(aes_string(
-        x = paste0(temp_var_prefix_2, "_morning_air_temp"),
-        fill = "'Group 2'"
-      ), alpha = 0.5) +
-      labs(
-        title = "Density Plot of Morning Air Temperature",
-        x = "Morning Air Temperature",
-        y = "Density",
-        fill = NULL
-      ) +
-      theme_minimal() +
-      theme(legend.position = "none")
-    
-    p_combined <- p3 / p2 / p1
-    return(p_combined)
-  }
-
-
-
-
-# Correlations ----
-# Function to calculate correlations for the three temperature variables
-calculate_correlation <- function(var_name) {
-  df_selected %>%
-    summarise(
-      night_air_temp_cor = cor(.data[[var_name]], night_air_temp, use = "complete.obs"),
-      afternoon_air_temp_cor = cor(.data[[var_name]], afternoon_air_temp, use = "complete.obs"),
-      morning_air_temp_cor = cor(.data[[var_name]], morning_air_temp, use = "complete.obs")
-    )
 }
 
 

@@ -4,8 +4,7 @@
 library(here)
 library(tidyverse)
 library(janitor)
-library(sf)
-library(magrittr)
+library(tidycensus)
 
 ## 2. Set working directory ----
 here::i_am("scripts/01_dataprocessing.R")
@@ -36,8 +35,8 @@ data <-
     "Total.Population",
     "Percent.of.Population.that.is.White.alone..Non.Hispanic",
     "Percent.of.Population.that.is.Minority",
-    "Percent.of.Population.whose.Income.is.Below.Poverty.Level",
-    "PERCENTAGE"
+    "PERCENTAGE",
+    "City_Name"
   ) %>%
   janitor::clean_names() %>%
   filter(!is.na(geoid))
@@ -52,11 +51,13 @@ tract_df <- data %>%
     pop_white = afternoon_air_temp * (percent_of_population_that_is_white_alone_non_hispanic / 100),
     minority_afternoon_air_temp = afternoon_air_temp * (percent_of_population_that_is_minority / 100),
     white_afternoon_air_temp = afternoon_air_temp * (percent_of_population_that_is_white_alone_non_hispanic / 100),
-    climate_zone = forcats::as_factor(stringr::str_to_title(climate_zone))
+    climate_zone = forcats::as_factor(stringr::str_to_title(climate_zone)),
+    city = paste0(city_name, ", ", state)
   ) %>%
   select(
     c(
       geoid,
+      city,
       minority_afternoon_air_temp,
       white_afternoon_air_temp,
       climate_zone,
