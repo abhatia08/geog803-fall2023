@@ -5,6 +5,7 @@ library(patchwork)
 library(janitor)
 library(survey)
 library(sandwich)
+library(ejanalysis)
 
 # ENSURE DIRECTORY ----
 ## Create directory if it doesn't exist
@@ -247,16 +248,16 @@ compute_stats <- function(data, time_of_day, climate_zone = NULL) {
     janitor::clean_names() %>%
     select(
       variable,
-      arid_mean,
-      arid_sd,
-      equatorial_mean,
-      equatorial_sd,
-      snow_mean,
-      snow_sd,
+      dry_mean,
+      dry_sd,
+      tropical_mean,
+      tropical_sd,
+      continental_mean,
+      continental_sd,
       temperate_mean,
       temperate_sd
     )
-  
+
   # Output 1
   cat("Stratified by Climate Zone:\n")
   print(final_results)
@@ -304,7 +305,7 @@ compute_stats <- function(data, time_of_day, climate_zone = NULL) {
   # Calculate totals across climate zones
   totals_across_climate_zones <- data %>%
     summarize(
-      total_population = sum(population),
+      # total_population = sum(population),
       total_white_temp = mean_white_temp,
       total_white_temp_sd = total_white_temp_sd,
       total_minority_temp = mean_minority_temp,
@@ -354,50 +355,54 @@ compute_stats <- function(data, time_of_day, climate_zone = NULL) {
 calculate_weighted_t_test <- function(data, time_of_day) {
   # Ensure the population is correctly formatted
   data$population <- as.numeric(data$population)
-  
+
   # Construct variable names based on time of day
   temp_var_minority <- paste0("minority_", time_of_day, "_air_temp")
   temp_var_white <- paste0("white_", time_of_day, "_air_temp")
-  
+
   # Ensure the selected columns exist in the data
   if (!all(c(temp_var_minority, temp_var_white, "population", "geoid") %in% colnames(data))) {
     cat("One or more of the required columns do not exist in the data.\n")
     return()
   }
-  
+
   # Select relevant columns
   analysis_data <- data %>%
     select(all_of(c(temp_var_minority, temp_var_white, "population", "geoid")))
-  
+
   # Create a survey design object
   design <-
     svydesign(ids = ~ geoid,
               weights = ~ population,
               data = analysis_data)
-  
+
   # Calculate population-weighted means and standard deviations
   mean_minority <- svymean( ~get(temp_var_minority), design, na.rm = TRUE)
   sd_minority <- svyvar( ~get(temp_var_minority), design, na.rm = TRUE)
   mean_white <- svymean( ~get(temp_var_white), design, na.rm = TRUE)
   sd_white <- svyvar( ~get(temp_var_white), design, na.rm = TRUE)
-  
+
   # Calculate the difference in means and its standard error
   mean_diff <- coef(mean_minority) - coef(mean_white)
   se_diff <-
     sqrt(
       coef(sd_minority) / sum(analysis_data$population) + coef(sd_white) / sum(analysis_data$population)
     )
-  
+
   # Perform a t-test with clustered standard errors
   t_stat <- mean_diff / se_diff
   p_value <-
     2 * pt(-abs(t_stat), df = sum(analysis_data$population) - 1)
-  
+
   # Print the results
   cat("Time of Day:", time_of_day, "\n")
   cat(sprintf("Population-Weighted Mean Difference: %.3f\n", mean_diff))
+  cat(sprintf("Population-Weighted SE Difference: %.3f\n", se_diff))
   cat(sprintf("P-Value: %.3f\n", p_value), "\n\n")
+
 }
+
+
 
 calculate_weighted_t_test_by_climate <- function(data, time_of_day) {
   # Ensure the population is correctly formatted
@@ -471,54 +476,77 @@ calculate_weighted_t_test_by_climate <- function(data, time_of_day) {
 
 
 
-# Kolm-Pollack ----
-# functions from: https://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.Rhttps://github.com/urutau-nz/kolmpollak-R/blob/master/R/kolmpollak.R
-
-ede <- function(a,
-                epsilon = NULL,
-                kappa = NULL,
-                weights = NULL)
-{
-  if (is.null(kappa)) {
-    if (is.null(epsilon)) {
-      stop("you must provide either an epsilon or kappa aversion parameter")
-    }
-    kappa <- calc_kappa(a, epsilon, weights)
+# Function to perform bootstrap and permutation test for means 
+perform_analysis <- function(data_zone, zone_name) {
+  # Bootstrap for Standard Deviation
+  n_boot <- 1000
+  boot_results <- numeric(n_boot)
+  for (i in 1:n_boot) {
+    boot_sample <- data_zone[sample(nrow(data_zone), replace = TRUE), ]
+    boot_results[i] <- calc_weighted_mean_diff(boot_sample)
   }
-  if (is.null(weights)) {
-    ede_sum <- sum(exp(a * -kappa))
-    N <- length(a)
-  } else{
-    ede_sum <- sum(exp(a * -kappa) * weights)
-    N <- sum(weights)
+  bootstrap_sd <- sd(boot_results)
+  
+  # Permutation Test for T-Test
+  n_perm <- 1000
+  perm_results <- numeric(n_perm)
+  obs_diff <- calc_weighted_mean_diff(data_zone)
+  for (i in 1:n_perm) {
+    shuffled_minority <- sample(data_zone$population_minority)
+    data_zone$population_minority <- shuffled_minority
+    perm_results[i] <- calc_weighted_mean_diff(data_zone)
   }
-  (-1 / kappa) * log(ede_sum / N)
+  p_value <- mean(abs(perm_results) >= abs(obs_diff))
+  
+  # Print results
+  cat(zone_name, "Zone\n")
+  cat("Bootstrap SD of Weighted Mean Difference:", bootstrap_sd, "\n")
+  cat("Permutation Test P-Value:", p_value, "\n\n")
 }
 
-index <- function(a,
-                  epsilon = NULL,
-                  kappa = NULL,
-                  weights = NULL)
-{
-  if (is.null(weights)) {
-    x_mean <- mean(a)
-  } else{
-    x_mean <- sum(a * weights) / sum(weights)
+
+
+perform_analysis_kolm <- function(data_zone, zone_name) {
+  # Bootstrap for Standard Deviation
+  n_boot <- 1000
+  boot_results <- numeric(n_boot)
+  for (i in 1:n_boot) {
+    boot_sample <- data_zone[sample(nrow(data_zone), replace = TRUE), ]
+    boot_results[i] <- calc_kp_diff(boot_sample)
   }
-  ede(a,
-      epsilon = epsilon,
-      kappa = kappa,
-      weights = weights) - x_mean
+  bootstrap_sd <- sd(boot_results)
+  
+  # Permutation Test for T-Test
+  n_perm <- 1000
+  perm_results <- numeric(n_perm)
+  obs_diff <- calc_kp_diff(data_zone)
+  for (i in 1:n_perm) {
+    shuffled_minority <- sample(data_zone$population_minority)
+    data_zone$population_minority <- shuffled_minority
+    perm_results[i] <- calc_kp_diff(data_zone)
+  }
+  p_value <- mean(abs(perm_results) >= abs(obs_diff))
+  
+  # Print results
+  cat(zone_name, "Zone\n")
+  cat("Bootstrap SD of Weighted Mean Difference:", bootstrap_sd, "\n")
+  cat("Permutation Test P-Value:", p_value, "\n\n")
 }
 
-calc_kappa <- function(a, epsilon, weights = NULL)
-{
-  if (is.null(weights)) {
-    x_sum <- sum(a)
-    x_sq_sum <- sum(a ** 2)
-  } else {
-    x_sum <- sum(a * weights)
-    x_sq_sum <- sum((a ** 2) * weights)
-  }
-  epsilon * (x_sum / x_sq_sum)
+
+# Function to calculate weighted mean difference
+calc_weighted_mean_diff <- function(df) {
+  mean_minority <- sum(df$minority_afternoon_air_temp * df$population_minority) / sum(df$population_minority)
+  mean_white <- sum(df$white_afternoon_air_temp * (df$population - df$population_minority)) / sum(df$population - df$population_minority)
+  mean_minority - mean_white
+}
+# Function to calculate KolmPollack  difference
+calc_kp_diff <- function(df) {
+  kp_minority <- KolmPollak(df$minority_afternoon_air_temp,
+                            bigbadx = TRUE,
+                            na.rm = TRUE)
+  kp_white <- KolmPollak(df$white_afternoon_air_temp,
+                         bigbadx = TRUE,
+                         na.rm = TRUE)
+  kp_minority - kp_white
 }
